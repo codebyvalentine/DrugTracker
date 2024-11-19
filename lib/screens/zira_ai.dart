@@ -138,8 +138,7 @@ class _ZiraAIState extends State<ZiraAIScreen> {
           if (_messages.isEmpty)
             Container(
               padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-              color: Colors
-                  .grey[100], // Subtle background for the suggestion section
+              color: Colors.grey[100],
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -4,8 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   // Define primary and additional colors
   static const Color primaryColor = Color(0xFF4CAF50);
-  static const Color darkGreen =
-      Color(0xFF388E3C); // Dark green for links and text
+  static const Color darkGreen = Color(0xFF388E3C); //
   static const Color cardGreen = Color(0xFFE8F5E9);
   static const Color lightCardGreen = Color(0xFFF1F8E9);
   static const Color lightBackgroundGreen = Color(0xFFE8F5E9);

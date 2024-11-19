@@ -14,7 +14,7 @@ class NotificationScreen extends StatelessWidget {
       body: ListView.builder(
         padding: const EdgeInsets.all(16.0),
         itemCount:
-            10, // Replace with actual notification count from a data source
+            5, // Replace with actual notification count from a data source
         itemBuilder: (context, index) {
           return Card(
             margin: const EdgeInsets.only(bottom: 12.0),

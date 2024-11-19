@@ -123,7 +123,7 @@ class HomeScreenContent extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                color: AppTheme.lightCardGreen, // Custom green card background
+                color: AppTheme.lightCardGreen,
                 child: ListTile(
                   contentPadding: EdgeInsets.all(16),
                   title: Text(

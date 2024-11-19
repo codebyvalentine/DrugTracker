@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/theme.dart'; // Make sure the path is correct
+import '../utils/theme.dart';
 
 class AddScreen extends StatefulWidget {
   @override
@@ -143,7 +143,6 @@ class _AddScreenState extends State<AddScreen> {
             // Show custom frequency fields when 'Custom' is selected
             if (isCustomFrequency) ...[
               SizedBox(height: 10.0),
-              // "How many pills?" input field (full width)
               TextField(
                 controller: pillsController,
                 keyboardType: TextInputType.number,
@@ -163,7 +162,6 @@ class _AddScreenState extends State<AddScreen> {
                 ),
               ),
               SizedBox(height: 10.0),
-              // "Interval and Hours" in one row
               Row(
                 children: [
                   Expanded(
@@ -329,7 +327,7 @@ class _AddScreenState extends State<AddScreen> {
             SizedBox(height: 30.0),
             ElevatedButton(
               onPressed: () {
-                // Save logic goes here
+                // Save medication logic goes here
               },
               child: Text("Save Medication"),
               style: ElevatedButton.styleFrom(

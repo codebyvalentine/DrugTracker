@@ -12,7 +12,6 @@ class ProfileScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // "You are not logged in" Text
             Text(
               "You are not logged in",
               style: TextStyle(
@@ -22,7 +21,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 30.0), // Space between text and buttons
+            SizedBox(height: 30.0),
 
             // Login Button
             ElevatedButton(
