@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import '../utils/theme.dart'; // Make sure the path is correct
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:main/screens/home_screen.dart';
+import 'package:main/screens/my_meds_screen.dart';
+import '../utils/theme.dart';
 
 class AddScreen extends StatefulWidget {
   const AddScreen({super.key});
@@ -9,6 +13,8 @@ class AddScreen extends StatefulWidget {
 }
 
 class _AddScreenState extends State<AddScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   // Step 1: Drug Details
   final TextEditingController drugNameController = TextEditingController();
   final TextEditingController dosageController = TextEditingController();
@@ -18,8 +24,7 @@ class _AddScreenState extends State<AddScreen> {
   bool isCustomFrequency = false; // To show/hide custom frequency fields
   final TextEditingController pillsController = TextEditingController();
   String? frequencyUnit = 'Hours';
-  final TextEditingController frequencyAmountController =
-      TextEditingController();
+  final TextEditingController frequencyAmountController = TextEditingController();
 
   // Step 3: Duration and Notes
   String? durationUnit = 'Days'; // Default unit for duration
@@ -27,6 +32,42 @@ class _AddScreenState extends State<AddScreen> {
   bool isIndefinite = false; // Checkbox to toggle indefinite duration
   final TextEditingController notesController = TextEditingController();
 
+  Future<void> _saveMedication() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await _firestore.collection('medications').doc(user.uid).set({
+          'drugName': drugNameController.text,
+          'dosage': dosageController.text,
+          'frequency': frequency,
+          'pills': isCustomFrequency ? pillsController.text : null,
+          'frequencyUnit': isCustomFrequency ? frequencyUnit : null,
+          'frequencyAmount': isCustomFrequency ? frequencyAmountController.text : null,
+          'duration': isIndefinite ? 'Indefinite' : durationController.text,
+          'durationUnit': isIndefinite ? null : durationUnit,
+          'notes': notesController.text,
+        },
+        SetOptions(merge: true)); // Merge with existing data
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Medication saved successfully")),
+        );
+       if (context.mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => MyMedsScreen()),
+          );
+       }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to save medication: $e")),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User not logged in")),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,12 +196,10 @@ class _AddScreenState extends State<AddScreen> {
                   hintStyle: const TextStyle(color: AppTheme.blackColor),
                   labelStyle: const TextStyle(color: AppTheme.blackColor),
                   enabledBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Theme.of(context).primaryColor),
+                    borderSide: BorderSide(color: Theme.of(context).primaryColor),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Theme.of(context).primaryColor),
+                    borderSide: BorderSide(color: Theme.of(context).primaryColor),
                   ),
                 ),
               ),
@@ -179,12 +218,10 @@ class _AddScreenState extends State<AddScreen> {
                         hintStyle: const TextStyle(color: AppTheme.blackColor),
                         labelStyle: const TextStyle(color: AppTheme.blackColor),
                         enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Theme.of(context).primaryColor),
+                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Theme.of(context).primaryColor),
+                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
                         ),
                       ),
                     ),
@@ -196,13 +233,10 @@ class _AddScreenState extends State<AddScreen> {
                       value: frequencyUnit,
                       decoration: InputDecoration(
                         enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Theme.of(context).primaryColor),
+                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor,
-                              width: 2.0),
+                          borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2.0),
                         ),
                         filled: true,
                         fillColor: Colors.white,
@@ -244,16 +278,13 @@ class _AddScreenState extends State<AddScreen> {
                       hintStyle: const TextStyle(color: AppTheme.blackColor),
                       labelStyle: const TextStyle(color: AppTheme.blackColor),
                       enabledBorder: OutlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Theme.of(context).primaryColor),
+                        borderSide: BorderSide(color: Theme.of(context).primaryColor),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Theme.of(context).primaryColor),
+                        borderSide: BorderSide(color: Theme.of(context).primaryColor),
                       ),
                     ),
-                    enabled:
-                        !isIndefinite, // Disable input when indefinite is selected
+                    enabled: !isIndefinite, // Disable input when indefinite is selected
                   ),
                 ),
                 const SizedBox(width: 10.0),
@@ -262,12 +293,10 @@ class _AddScreenState extends State<AddScreen> {
                     value: durationUnit,
                     decoration: InputDecoration(
                       enabledBorder: OutlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Theme.of(context).primaryColor),
+                        borderSide: BorderSide(color: Theme.of(context).primaryColor),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Theme.of(context).primaryColor, width: 2.0),
+                        borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2.0),
                       ),
                       filled: true,
                       fillColor: Colors.white,
@@ -330,9 +359,7 @@ class _AddScreenState extends State<AddScreen> {
             ),
             const SizedBox(height: 30.0),
             ElevatedButton(
-              onPressed: () {
-                // Save logic goes here
-              },
+              onPressed: _saveMedication,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 14.0),

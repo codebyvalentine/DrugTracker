@@ -1,49 +1,70 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../utils/theme.dart';
 import 'add_screen.dart';
 
 class MyMedsScreen extends StatefulWidget {
   const MyMedsScreen({super.key});
-
   @override
   _MyMedsScreenState createState() => _MyMedsScreenState();
 }
 
 class _MyMedsScreenState extends State<MyMedsScreen> {
-  final List<Map<String, dynamic>> _medications = [
-    {
-      'name': 'Paracetamol',
-      'dosage': '500mg',
-      'schedule': 'Once Daily at 8:00 AM',
-      'status': 'on track',
-      'time': '8:00 AM',
-    },
-    {
-      'name': 'Ibuprofen',
-      'dosage': '200mg',
-      'schedule': 'Every 8 Hours',
-      'status': 'missed',
-      'time': '12:00 PM',
-    },
-    {
-      'name': 'Aspirin',
-      'dosage': '100mg',
-      'schedule': 'Twice Daily at 7:00 AM, 7:00 PM',
-      'status': 'on track',
-      'time': '7:00 PM',
-    },
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  List<Map<String, dynamic>> _medications = [];
+  bool _isLoading = true;
 
-  // Search query
   String _searchQuery = '';
-
-  // Filter by time/status
-  String _selectedTimeFilter = 'Time'; // Default placeholder
-  String _selectedStatusFilter = 'Status'; // Default placeholder
+  String _selectedTimeFilter = 'Time';
+  String _selectedStatusFilter = 'Status';
 
   @override
+  void initState() {
+    super.initState();
+    _fetchMedications();
+  }
+
+  Future<void> _fetchMedications() async {
+    final User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        DocumentSnapshot documentSnapshot = await _firestore
+            .collection('medications')
+            .doc(user.uid)
+            .get();
+        if (documentSnapshot.exists) {
+          final data = documentSnapshot.data() as Map<String, dynamic>;
+          setState(() {
+            _medications = [
+              {
+                'name': data['drugName'] ?? 'Unknown',
+                'dosage': data['dosage'] ?? 'Unknown',
+                'schedule': data['frequency'] ?? 'Unknown',
+                'time': data['time'] ?? 'Unknown',
+                'status': data['status'] ?? 'Unknown',
+              }
+            ];
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to load medications: $e")),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+  @override
   Widget build(BuildContext context) {
-    // Filter and search logic
     final filteredMeds = _medications.where((med) {
       final matchesSearch = _searchQuery.isEmpty ||
           med['name'].toLowerCase().contains(_searchQuery.toLowerCase());
@@ -51,138 +72,127 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
           (_selectedTimeFilter == 'Morning' && med['time'].contains('AM')) ||
           (_selectedTimeFilter == 'Evening' && med['time'].contains('PM'));
       final matchesStatus = _selectedStatusFilter == 'Status' ||
-          (_selectedStatusFilter == 'On Track' &&
-              med['status'] == 'on track') ||
+          (_selectedStatusFilter == 'On Track' && med['status'] == 'on track') ||
           (_selectedStatusFilter == 'Missed' && med['status'] == 'missed');
       return matchesSearch && matchesTime && matchesStatus;
     }).toList();
 
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar
-            TextField(
-              onChanged: (value) => setState(() {
-                _searchQuery = value;
-              }),
-              decoration: InputDecoration(
-                hintText: 'Search medications...',
-                prefixIcon: const Icon(Icons.search),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    onChanged: (value) => setState(() {
+                      _searchQuery = value;
+                    }),
+                    decoration: InputDecoration(
+                      hintText: 'Search medications...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'All Medications',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Row(
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.access_time, size: 18),
+                              const SizedBox(width: 8),
+                              DropdownButton<String>(
+                                value: _selectedTimeFilter,
+                                items: ['Time', 'Morning', 'Evening']
+                                    .map((filter) => DropdownMenuItem(
+                                          value: filter,
+                                          child: Text(filter),
+                                        ))
+                                    .toList(),
+                                onChanged: (value) => setState(() {
+                                  _selectedTimeFilter = value!;
+                                }),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 16),
+                          Row(
+                            children: [
+                              const Icon(Icons.check_circle, size: 18),
+                              const SizedBox(width: 8),
+                              DropdownButton<String>(
+                                value: _selectedStatusFilter,
+                                items: ['Status', 'On Track', 'Missed']
+                                    .map((filter) => DropdownMenuItem(
+                                          value: filter,
+                                          child: Text(filter),
+                                        ))
+                                    .toList(),
+                                onChanged: (value) => setState(() {
+                                  _selectedStatusFilter = value!;
+                                }),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Column(
+                    children: filteredMeds.map((med) {
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,
+                        color: AppTheme.lightCardGreen,
+                        child: ListTile(
+                          title: Text(med['name'],
+                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text(
+                            '${med['dosage']} • ${med['schedule']}',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                onPressed: () {
+                                  // Edit logic
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  setState(() {
+                                    _medications.remove(med);
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Row for "All Medications" and Filters
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // "All Medications" Text
-                const Text(
-                  'All Medications',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                // Filters (Time and Status)
-                Row(
-                  children: [
-                    // Time Filter Dropdown with Icon
-                    Row(
-                      children: [
-                        const Icon(Icons.access_time, size: 18),
-                        const SizedBox(width: 8),
-                        DropdownButton<String>(
-                          value: _selectedTimeFilter,
-                          items: ['Time', 'Morning', 'Evening']
-                              .map((filter) => DropdownMenuItem(
-                                    value: filter,
-                                    child: Text(filter),
-                                  ))
-                              .toList(),
-                          onChanged: (value) => setState(() {
-                            _selectedTimeFilter = value!;
-                          }),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 16),
-                    // Status Filter Dropdown
-                    Row(
-                      children: [
-                        const Icon(Icons.check_circle, size: 18),
-                        const SizedBox(width: 8),
-                        DropdownButton<String>(
-                          value: _selectedStatusFilter,
-                          items: ['Status', 'On Track', 'Missed']
-                              .map((filter) => DropdownMenuItem(
-                                    value: filter,
-                                    child: Text(filter),
-                                  ))
-                              .toList(),
-                          onChanged: (value) => setState(() {
-                            _selectedStatusFilter = value!;
-                          }),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Medication List Section
-            Column(
-              children: filteredMeds.map((med) {
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 4,
-                  color: AppTheme.lightCardGreen,
-                  child: ListTile(
-                    title: Text(med['name'],
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                      '${med['dosage']} • ${med['schedule']}',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            // Edit logic
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            // Delete logic
-                            setState(() {
-                              _medications.remove(med);
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-
-      // Floating Action Button
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to Add Screen
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddScreen()),
