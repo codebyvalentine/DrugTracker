@@ -9,7 +9,6 @@ class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
-
 class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -23,38 +22,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    //_loadUserData();
+    _loadUserData();
   }
 
-  // Future<void> _loadUserData() async {
-  //   final User? user = _auth.currentUser;
-  //   if (user != null) {
-  //     try {
-  //       DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
-  //       if (userDoc.exists) {
-  //         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-  //         setState(() {
-  //           _firstNameController.text = userData['firstName'] ?? '';
-  //           _lastNameController.text = userData['lastName'] ?? '';
-  //           _emailController.text = user.email ?? '';
-  //           _isLoading = false;
-  //         });
-  //       }
-  //     } catch (e) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text("Failed to load user data: $e")),
-  //       );
-  //       setState(() {
-  //         _isLoading = false;
-  //       });
-  //     }
-  //   } else {
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (context) => const LoginScreen()),
-  //     );
-  //   }
-  // }
+  Future<void> _loadUserData() async {
+    final User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+          setState(() {
+            _firstNameController.text = userData['firstName'] ?? '';
+            _lastNameController.text = userData['lastName'] ?? '';
+            _emailController.text = user.email ?? '';
+            _isLoading = false;
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("User data not found")),
+          );
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to load user data: $e")),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        await _firestore.collection('users').doc(user.uid).update({
+          'firstName': _firstNameController.text,
+          'lastName': _lastNameController.text,
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Profile updated successfully")),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to update profile: $e")),
+        );
+      }
+    }
+  }
 
   Future<void> _logout() async {
     await _auth.signOut();
@@ -116,7 +141,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 30.0),
-            /*
             TextFormField(
               controller: _firstNameController,
               decoration: const InputDecoration(labelText: 'First Name'),
@@ -140,7 +164,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
               ),
             ),
-            */
           ],
         ),
       ),
