@@ -30,29 +30,26 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
     final User? user = _auth.currentUser;
     if (user != null) {
       try {
-        DocumentSnapshot documentSnapshot = await _firestore
+        final QuerySnapshot medicationsSnapshot = await _firestore
             .collection('medications')
             .doc(user.uid)
+            .collection('userMedications')
             .get();
-        if (documentSnapshot.exists) {
-          final data = documentSnapshot.data() as Map<String, dynamic>;
-          setState(() {
-            _medications = [
-              {
-                'name': data['drugName'] ?? 'Unknown',
-                'dosage': data['dosage'] ?? 'Unknown',
-                'schedule': data['frequency'] ?? 'Unknown',
-                'time': data['time'] ?? 'Unknown',
-                'status': data['status'] ?? 'Unknown',
-              }
-            ];
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+        final List<Map<String, dynamic>> medications = medicationsSnapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return {
+            'id': doc.id,
+            'name': data['drugName'] ?? 'Unknown',
+            'dosage': data['dosage'] ?? 'Unknown',
+            'schedule': data['frequency'] ?? 'Unknown',
+            'time': data['time'] ?? 'Unknown',
+            'status': data['status'] ?? 'Unknown',
+          };
+        }).toList();
+        setState(() {
+          _medications = medications;
+          _isLoading = false;
+        });
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to load medications: $e")),
@@ -63,6 +60,58 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
       }
     }
   }
+
+  void _deleteMedication(Map<String, dynamic> med) async {
+    final User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        await _firestore
+            .collection('medications')
+            .doc(user.uid)
+            .collection('userMedications')
+            .doc(med['id'])
+            .delete();
+        setState(() {
+          _medications.remove(med);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Medication deleted successfully")),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to delete medication: $e")),
+        );
+      }
+    }
+  }
+
+  void _confirmDeleteMedication(Map<String, dynamic> med) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text("Are you sure you want to delete this medication?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteMedication(med);
+              },
+              child: Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredMeds = _medications.where((med) {
@@ -98,53 +147,49 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'All Medications',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedTimeFilter,
+                          items: ['Time', 'Morning', 'Evening']
+                              .map((filter) => DropdownMenuItem(
+                                    value: filter,
+                                    child: Text(filter),
+                                  ))
+                              .toList(),
+                          onChanged: (value) => setState(() {
+                            _selectedTimeFilter = value!;
+                          }),
+                          decoration: InputDecoration(
+                            labelText: 'Time',
+                            prefixIcon: const Icon(Icons.access_time),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
                       ),
-                      Row(
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.access_time, size: 18),
-                              const SizedBox(width: 8),
-                              DropdownButton<String>(
-                                value: _selectedTimeFilter,
-                                items: ['Time', 'Morning', 'Evening']
-                                    .map((filter) => DropdownMenuItem(
-                                          value: filter,
-                                          child: Text(filter),
-                                        ))
-                                    .toList(),
-                                onChanged: (value) => setState(() {
-                                  _selectedTimeFilter = value!;
-                                }),
-                              ),
-                            ],
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedStatusFilter,
+                          items: ['Status', 'On Track', 'Missed']
+                              .map((filter) => DropdownMenuItem(
+                                    value: filter,
+                                    child: Text(filter),
+                                  ))
+                              .toList(),
+                          onChanged: (value) => setState(() {
+                            _selectedStatusFilter = value!;
+                          }),
+                          decoration: InputDecoration(
+                            labelText: 'Status',
+                            prefixIcon: const Icon(Icons.check_circle),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          const SizedBox(width: 16),
-                          Row(
-                            children: [
-                              const Icon(Icons.check_circle, size: 18),
-                              const SizedBox(width: 8),
-                              DropdownButton<String>(
-                                value: _selectedStatusFilter,
-                                items: ['Status', 'On Track', 'Missed']
-                                    .map((filter) => DropdownMenuItem(
-                                          value: filter,
-                                          child: Text(filter),
-                                        ))
-                                    .toList(),
-                                onChanged: (value) => setState(() {
-                                  _selectedStatusFilter = value!;
-                                }),
-                              ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
@@ -171,15 +216,18 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                               IconButton(
                                 icon: const Icon(Icons.edit, color: Colors.blue),
                                 onPressed: () {
-                                  // Edit logic
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AddScreen(medication: med),
+                                    ),
+                                  );
                                 },
                               ),
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () {
-                                  setState(() {
-                                    _medications.remove(med);
-                                  });
+                                  _confirmDeleteMedication(med);
                                 },
                               ),
                             ],

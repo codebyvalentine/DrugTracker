@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
+import 'home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,25 +27,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserData();
   }
 
-Future<void> _saveProfile() async {
-  final User? user = _auth.currentUser;
-  if (user != null) {
-    try {
-      await _firestore.collection('users').doc(user.uid).update({
-        'firstName': _firstNameController.text,
-        'lastName': _lastNameController.text,
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Profile updated successfully")),
-      );
-
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to update profile: $e")),
-      );
+  Future<void> _saveProfile() async {
+    final User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        await _firestore.collection('users').doc(user.uid).update({
+          'firstName': _firstNameController.text,
+          'lastName': _lastNameController.text,
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Profile updated successfully")),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to update profile: $e")),
+        );
+      }
     }
   }
-}
 
   Future<void> _loadUserData() async {
     final User? user = _auth.currentUser;
@@ -59,8 +59,7 @@ Future<void> _saveProfile() async {
             _emailController.text = user.email ?? '';
             _isLoading = false;
           });
-        }
-        else {
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("User data not found")),
           );
@@ -91,6 +90,38 @@ Future<void> _saveProfile() async {
       MaterialPageRoute(builder: (context) => const LoginScreen()),
           (route) => false,
     );
+  }
+// profile deletes but the medicatinos does not delete alongside
+  Future<void> _deleteProfile() async {
+    final User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        final QuerySnapshot medicationsSnapshot = await _firestore
+            .collection('medications')
+            .doc(user.uid)
+            .collection('userMedications')
+            .get();
+        for (final DocumentSnapshot doc in medicationsSnapshot.docs) {
+          await doc.reference.delete();
+        }
+
+        await _firestore.collection('users').doc(user.uid).delete();
+        await user.delete();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Profile deleted successfully")),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+              (route) => false,
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to delete profile: $e")),
+        );
+      }
+    }
   }
 
   @override
@@ -156,14 +187,12 @@ Future<void> _saveProfile() async {
               decoration: const InputDecoration(labelText: 'Last Name'),
             ),
 
-
             const SizedBox(height: 16.0),
             TextFormField(
               controller: _emailController,
               readOnly: true,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
-
 
             const SizedBox(height: 30.0),
             ElevatedButton(
@@ -174,6 +203,41 @@ Future<void> _saveProfile() async {
               ),
             ),
 
+            const SizedBox(height: 30.0),
+            ElevatedButton(
+              onPressed: () async {
+                final bool? confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Delete Profile'),
+                      content: const Text('Are you sure you want to delete your profile? This action cannot be undone.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                if (confirm == true) {
+                  _deleteProfile();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text(
+                'Delete My Profile',
+                style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
       ),

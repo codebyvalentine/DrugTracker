@@ -1,42 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:main/screens/home_screen.dart';
-import 'package:main/screens/my_meds_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'my_meds_screen.dart';
 import '../utils/theme.dart';
 
 class AddScreen extends StatefulWidget {
-  const AddScreen({super.key});
+  final Map<String, dynamic>? medication;
+
+  const AddScreen({Key? key, this.medication}) : super(key: key);
 
   @override
   _AddScreenState createState() => _AddScreenState();
 }
 
 class _AddScreenState extends State<AddScreen> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  // Step 1: Drug Details
   final TextEditingController drugNameController = TextEditingController();
   final TextEditingController dosageController = TextEditingController();
-
-  // Step 2: Schedule
-  String? frequency = 'Once Daily';
-  bool isCustomFrequency = false; // To show/hide custom frequency fields
   final TextEditingController pillsController = TextEditingController();
-  String? frequencyUnit = 'Hours';
   final TextEditingController frequencyAmountController = TextEditingController();
-
-  // Step 3: Duration and Notes
-  String? durationUnit = 'Days'; // Default unit for duration
   final TextEditingController durationController = TextEditingController();
-  bool isIndefinite = false; // Checkbox to toggle indefinite duration
   final TextEditingController notesController = TextEditingController();
+  String? frequency;
+  String? frequencyUnit;
+  String? durationUnit;
+  bool isCustomFrequency = false;
+  bool isIndefinite = false;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.medication != null) {
+      drugNameController.text = widget.medication!['name'] ?? '';
+      dosageController.text = widget.medication!['dosage'] ?? '';
+      pillsController.text = widget.medication!['pills'] ?? '';
+      frequencyAmountController.text = widget.medication!['frequencyAmount'] ?? '';
+      durationController.text = widget.medication!['duration'] ?? '';
+      notesController.text = widget.medication!['notes'] ?? '';
+      frequency = widget.medication!['schedule'];
+      frequencyUnit = widget.medication!['frequencyUnit'];
+      durationUnit = widget.medication!['durationUnit'];
+      isCustomFrequency = widget.medication!['isCustomFrequency'] ?? false;
+      isIndefinite = widget.medication!['isIndefinite'] ?? false;
+    }
+  }
+
+  @override
+  void dispose() {
+    drugNameController.dispose();
+    dosageController.dispose();
+    pillsController.dispose();
+    frequencyAmountController.dispose();
+    durationController.dispose();
+    notesController.dispose();
+    super.dispose();
+  }
   Future<void> _saveMedication() async {
     final User? user = FirebaseAuth.instance.currentUser;
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
     if (user != null) {
       try {
-        await _firestore.collection('medications').doc(user.uid).set({
+        await _firestore
+            .collection('medications')
+            .doc(user.uid)
+            .collection('userMedications')
+            .add({
           'drugName': drugNameController.text,
           'dosage': dosageController.text,
           'frequency': frequency,
@@ -46,17 +74,17 @@ class _AddScreenState extends State<AddScreen> {
           'duration': isIndefinite ? 'Indefinite' : durationController.text,
           'durationUnit': isIndefinite ? null : durationUnit,
           'notes': notesController.text,
-        },
-        SetOptions(merge: true)); // Merge with existing data
+        });
+
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Medication saved successfully")),
         );
-       if (context.mounted) {
+        if (context.mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => MyMedsScreen()),
           );
-       }
+        }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to save medication: $e")),
@@ -71,57 +99,32 @@ class _AddScreenState extends State<AddScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      appBar: AppBar(
+        title: const Text('Add Medication'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView(
           children: [
-            // Step 1: Drug Details
-            const Text(
-              "Step 1: Drug Details",
-              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10.0),
             TextField(
               controller: drugNameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Drug Name',
-                hintText: 'Enter the name of the drug',
-                hintStyle: const TextStyle(color: AppTheme.blackColor),
-                labelStyle: const TextStyle(color: AppTheme.blackColor),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                ),
               ),
             ),
             const SizedBox(height: 10.0),
             TextField(
               controller: dosageController,
-              decoration: InputDecoration(
-                labelText: 'Dosage (Optional)',
-                hintText: 'Enter dosage (e.g., 50mg)',
-                hintStyle: const TextStyle(color: AppTheme.blackColor),
-                labelStyle: const TextStyle(color: AppTheme.blackColor),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                ),
+              decoration: const InputDecoration(
+                labelText: 'Dosage',
               ),
             ),
             const SizedBox(height: 30.0),
-
-            // Step 2: Schedule
             const Text(
               "Step 2: Schedule",
               style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10.0),
-            // Frequency options
             Column(
               children: [
                 ListTile(
@@ -182,29 +185,16 @@ class _AddScreenState extends State<AddScreen> {
                 ),
               ],
             ),
-
-            // Show custom frequency fields when 'Custom' is selected
             if (isCustomFrequency) ...[
               const SizedBox(height: 10.0),
-              // "How many pills?" input field (full width)
               TextField(
                 controller: pillsController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'How many pills?',
-                  hintText: 'Enter number of pills',
-                  hintStyle: const TextStyle(color: AppTheme.blackColor),
-                  labelStyle: const TextStyle(color: AppTheme.blackColor),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                  ),
                 ),
               ),
               const SizedBox(height: 10.0),
-              // "Interval and Hours" in one row
               Row(
                 children: [
                   Expanded(
@@ -212,17 +202,8 @@ class _AddScreenState extends State<AddScreen> {
                     child: TextField(
                       controller: frequencyAmountController,
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Enter interval (e.g., 6)',
-                        hintText: 'e.g., 6 hours or days',
-                        hintStyle: const TextStyle(color: AppTheme.blackColor),
-                        labelStyle: const TextStyle(color: AppTheme.blackColor),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                        ),
                       ),
                     ),
                   ),
@@ -231,13 +212,7 @@ class _AddScreenState extends State<AddScreen> {
                     flex: 2,
                     child: DropdownButtonFormField<String>(
                       value: frequencyUnit,
-                      decoration: InputDecoration(
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2.0),
-                        ),
+                      decoration: const InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
                       ),
@@ -258,8 +233,6 @@ class _AddScreenState extends State<AddScreen> {
                 ],
               ),
             ],
-
-            // Step 3: Duration and Notes
             const SizedBox(height: 30.0),
             const Text(
               "Step 3: Duration and Notes",
@@ -272,37 +245,22 @@ class _AddScreenState extends State<AddScreen> {
                   child: TextField(
                     controller: durationController,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Enter duration',
-                      hintText: 'e.g., 30',
-                      hintStyle: const TextStyle(color: AppTheme.blackColor),
-                      labelStyle: const TextStyle(color: AppTheme.blackColor),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                      ),
                     ),
-                    enabled: !isIndefinite, // Disable input when indefinite is selected
+                    enabled: !isIndefinite,
                   ),
                 ),
                 const SizedBox(width: 10.0),
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: durationUnit,
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2.0),
-                      ),
+                    decoration: const InputDecoration(
                       filled: true,
                       fillColor: Colors.white,
                     ),
                     onChanged: isIndefinite
-                        ? null // Disable dropdown when "Indefinite" is selected
+                        ? null
                         : (String? newValue) {
                             setState(() {
                               durationUnit = newValue;
@@ -335,26 +293,14 @@ class _AddScreenState extends State<AddScreen> {
                   },
                   activeColor: Theme.of(context).primaryColor,
                 ),
-                const Text(
-                  'Indefinite',
-                  style: TextStyle(color: AppTheme.blackColor),
-                ),
+                const Text('Indefinite'),
               ],
             ),
             const SizedBox(height: 10.0),
             TextField(
               controller: notesController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Additional Notes',
-                hintText: 'Any special instructions?',
-                hintStyle: const TextStyle(color: AppTheme.blackColor),
-                labelStyle: const TextStyle(color: AppTheme.blackColor),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                ),
               ),
             ),
             const SizedBox(height: 30.0),
