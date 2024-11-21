@@ -9,6 +9,7 @@ class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
+
 class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -25,6 +26,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserData();
   }
 
+Future<void> _saveProfile() async {
+  final User? user = _auth.currentUser;
+  if (user != null) {
+    try {
+      await _firestore.collection('users').doc(user.uid).update({
+        'firstName': _firstNameController.text,
+        'lastName': _lastNameController.text,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Profile updated successfully")),
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to update profile: $e")),
+      );
+    }
+  }
+}
+
   Future<void> _loadUserData() async {
     final User? user = _auth.currentUser;
     if (user != null) {
@@ -38,7 +59,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _emailController.text = user.email ?? '';
             _isLoading = false;
           });
-        } else {
+        }
+        else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("User data not found")),
           );
@@ -59,25 +81,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
-    }
-  }
-
-  Future<void> _saveProfile() async {
-    final User? user = _auth.currentUser;
-    if (user != null) {
-      try {
-        await _firestore.collection('users').doc(user.uid).update({
-          'firstName': _firstNameController.text,
-          'lastName': _lastNameController.text,
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Profile updated successfully")),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to update profile: $e")),
-        );
-      }
     }
   }
 
@@ -141,21 +144,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 30.0),
+
             TextFormField(
               controller: _firstNameController,
               decoration: const InputDecoration(labelText: 'First Name'),
             ),
+
             const SizedBox(height: 16.0),
             TextFormField(
               controller: _lastNameController,
               decoration: const InputDecoration(labelText: 'Last Name'),
             ),
+
+
             const SizedBox(height: 16.0),
             TextFormField(
               controller: _emailController,
               readOnly: true,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
+
+
             const SizedBox(height: 30.0),
             ElevatedButton(
               onPressed: _saveProfile,
@@ -164,6 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
               ),
             ),
+
           ],
         ),
       ),
