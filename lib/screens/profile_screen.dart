@@ -23,38 +23,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    //_loadUserData();
   }
 
-  Future<void> _loadUserData() async {
-    final User? user = _auth.currentUser;
-    if (user != null) {
-      try {
-        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-          Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-          setState(() {
-            _firstNameController.text = userData['firstName'] ?? '';
-            _lastNameController.text = userData['lastName'] ?? '';
-            _emailController.text = user.email ?? '';
-            _isLoading = false;
-          });
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to load user data: $e")),
-        );
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-    }
-  }
+  // Future<void> _loadUserData() async {
+  //   final User? user = _auth.currentUser;
+  //   if (user != null) {
+  //     try {
+  //       DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+  //       if (userDoc.exists) {
+  //         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+  //         setState(() {
+  //           _firstNameController.text = userData['firstName'] ?? '';
+  //           _lastNameController.text = userData['lastName'] ?? '';
+  //           _emailController.text = user.email ?? '';
+  //           _isLoading = false;
+  //         });
+  //       }
+  //     } catch (e) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text("Failed to load user data: $e")),
+  //       );
+  //       setState(() {
+  //         _isLoading = false;
+  //       });
+  //     }
+  //   } else {
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (context) => const LoginScreen()),
+  //     );
+  //   }
+  // }
 
   Future<void> _logout() async {
     await _auth.signOut();
