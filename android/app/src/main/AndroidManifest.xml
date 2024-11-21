@@ -5,7 +5,7 @@
 
     <application
         android:label="main"
-        android:name="${applicationName}"
+        android:name="Presribr"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
