@@ -3,6 +3,8 @@ import 'login_screen.dart';
 import 'register_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,48 +23,48 @@ class ProfileScreen extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 30.0),
+            const SizedBox(height: 30.0),
 
             // Login Button
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
-                padding: EdgeInsets.symmetric(vertical: 14.0),
+                padding: const EdgeInsets.symmetric(vertical: 14.0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
                 elevation: 4,
               ),
-              child: Text(
+              child: const Text(
                 "Login",
                 style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
               ),
             ),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
 
             // Register Button
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => RegisterScreen()),
+                  MaterialPageRoute(builder: (context) => const RegisterScreen()),
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
-                padding: EdgeInsets.symmetric(vertical: 14.0),
+                padding: const EdgeInsets.symmetric(vertical: 14.0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
                 elevation: 4,
               ),
-              child: Text(
+              child: const Text(
                 "Register",
                 style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
               ),

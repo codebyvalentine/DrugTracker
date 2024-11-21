@@ -5,7 +5,7 @@ class CustomNavigationBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTabChanged;
 
-  CustomNavigationBar({
+  const CustomNavigationBar({super.key, 
     required this.currentIndex,
     required this.onTabChanged,
   });
@@ -22,7 +22,7 @@ class CustomNavigationBar extends StatelessWidget {
       unselectedItemColor: Colors.grey,
       selectedFontSize: 14.0,
       unselectedFontSize: 12.0,
-      items: [
+      items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
           label: "Home",

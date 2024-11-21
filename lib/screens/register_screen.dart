@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatelessWidget {
+  const RegisterScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,42 +22,42 @@ class RegisterScreen extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 30.0),
-            TextField(
+            const SizedBox(height: 30.0),
+            const TextField(
               decoration: InputDecoration(
                 labelText: "Name",
               ),
             ),
-            SizedBox(height: 16.0),
-            TextField(
+            const SizedBox(height: 16.0),
+            const TextField(
               decoration: InputDecoration(
                 labelText: "Email",
               ),
             ),
-            SizedBox(height: 16.0),
-            TextField(
+            const SizedBox(height: 16.0),
+            const TextField(
               obscureText: true,
               decoration: InputDecoration(
                 labelText: "Password",
               ),
             ),
-            SizedBox(height: 30.0),
+            const SizedBox(height: 30.0),
             ElevatedButton(
               onPressed: () {
                 // Add Register Logic
               },
-              child: Text("Register Now"),
+              child: const Text("Register Now"),
             ),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
             Center(
               child: TextButton(
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
                   );
                 },
-                child: Text("Already have an account? Login now"),
+                child: const Text("Already have an account? Login now"),
               ),
             ),
           ],

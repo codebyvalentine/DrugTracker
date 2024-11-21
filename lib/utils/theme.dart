@@ -17,7 +17,7 @@ class AppTheme {
     primaryColor: primaryColor,
     primarySwatch: MaterialColor(
       primaryColor.value,
-      {
+      const {
         50: Color(0xFFE8F5E9),
         100: Color(0xFFC8E6C9),
         200: Color(0xFFA5D6A7),
@@ -39,7 +39,7 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(vertical: 14.0),
+        padding: const EdgeInsets.symmetric(vertical: 14.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
         ),
@@ -49,13 +49,13 @@ class AppTheme {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: darkGreen, // Apply dark green color to links
-        textStyle: TextStyle(
+        textStyle: const TextStyle(
           fontWeight: FontWeight.w500,
           decoration: TextDecoration.underline,
         ),
       ),
     ),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: Colors.white,
       selectedItemColor: primaryColor,
       unselectedItemColor: Colors.grey,
@@ -65,14 +65,14 @@ class AppTheme {
       filled: true,
       fillColor: inputFillColor,
       hintStyle: TextStyle(color: Colors.grey[600]),
-      contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+      contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.0),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.0),
-        borderSide: BorderSide(
+        borderSide: const BorderSide(
           color: primaryColor,
           width: 2.0,
         ),

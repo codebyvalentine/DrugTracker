@@ -8,7 +8,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isCloseButton;
   final VoidCallback? onBack;
 
-  TopBar({
+  const TopBar({super.key, 
     this.showBackButton = false,
     this.isCloseButton = false,
     this.onBack,
@@ -29,24 +29,24 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         if (!showBackButton && !isCloseButton)
           IconButton(
-            icon: Icon(Icons.notifications),
+            icon: const Icon(Icons.notifications),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => NotificationScreen(),
+                  builder: (context) => const NotificationScreen(),
                 ),
               );
             },
           ),
         if (!showBackButton && !isCloseButton)
           IconButton(
-            icon: Icon(Icons.person),
+            icon: const Icon(Icons.person),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ProfileScreen(),
+                  builder: (context) => const ProfileScreen(),
                 ),
               );
             },
@@ -56,5 +56,5 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

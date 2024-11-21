@@ -7,6 +7,8 @@ import '../widgets/top_bar.dart';
 import '../utils/theme.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -14,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   String _greeting = '';
-  List<Map<String, String>> _upcomingMeds = [
+  final List<Map<String, String>> _upcomingMeds = [
     {'name': 'Paracetamol', 'time': '8:00 AM'},
     {'name': 'Ibuprofen', 'time': '12:00 PM'},
     {'name': 'Aspirin', 'time': '5:00 PM'},
@@ -22,9 +24,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     HomeScreenContent(), // Home Screen content
-    AddScreen(),
-    MyMedsScreen(),
-    ZiraAIScreen(),
+    const AddScreen(),
+    const MyMedsScreen(),
+    const ZiraAIScreen(),
   ];
 
   @override
@@ -78,14 +80,13 @@ class HomeScreenContent extends StatelessWidget {
   final List<Map<String, String>> upcomingMeds;
 
   HomeScreenContent({
-    Key? key,
+    super.key,
   })  : greeting = "Good Morning, Jack!", // Set the greeting message here
         upcomingMeds = [
           {'name': 'Paracetamol', 'time': '8:00 AM'},
           {'name': 'Ibuprofen', 'time': '12:00 PM'},
           {'name': 'Aspirin', 'time': '5:00 PM'},
-        ], // Placeholder for upcoming medications
-        super(key: key);
+        ];
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +97,7 @@ class HomeScreenContent extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Text(
             greeting,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.black,
@@ -104,8 +105,8 @@ class HomeScreenContent extends StatelessWidget {
           ),
         ),
         // Upcoming Medications Section
-        Padding(
-          padding: const EdgeInsets.all(16.0),
+        const Padding(
+          padding: EdgeInsets.all(16.0),
           child: Text(
             'Upcoming Medications',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -118,21 +119,21 @@ class HomeScreenContent extends StatelessWidget {
             itemBuilder: (context, index) {
               final medication = upcomingMeds[index];
               return Card(
-                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 elevation: 4,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 color: AppTheme.lightCardGreen,
                 child: ListTile(
-                  contentPadding: EdgeInsets.all(16),
+                  contentPadding: const EdgeInsets.all(16),
                   title: Text(
                     medication['name']!,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
                     'Time: ${medication['time']}',
-                    style: TextStyle(fontSize: 14),
+                    style: const TextStyle(fontSize: 14),
                   ),
                   trailing: Icon(
                     Icons.alarm,

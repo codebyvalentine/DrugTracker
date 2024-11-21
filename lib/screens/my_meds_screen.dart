@@ -3,6 +3,8 @@ import '../utils/theme.dart';
 import 'add_screen.dart';
 
 class MyMedsScreen extends StatefulWidget {
+  const MyMedsScreen({super.key});
+
   @override
   _MyMedsScreenState createState() => _MyMedsScreenState();
 }
@@ -57,7 +59,7 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -68,19 +70,19 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
               }),
               decoration: InputDecoration(
                 hintText: 'Search medications...',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search),
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Row for "All Medications" and Filters
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // "All Medications" Text
-                Text(
+                const Text(
                   'All Medications',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -90,8 +92,8 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                     // Time Filter Dropdown with Icon
                     Row(
                       children: [
-                        Icon(Icons.access_time, size: 18),
-                        SizedBox(width: 8),
+                        const Icon(Icons.access_time, size: 18),
+                        const SizedBox(width: 8),
                         DropdownButton<String>(
                           value: _selectedTimeFilter,
                           items: ['Time', 'Morning', 'Evening']
@@ -106,12 +108,12 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     // Status Filter Dropdown
                     Row(
                       children: [
-                        Icon(Icons.check_circle, size: 18),
-                        SizedBox(width: 8),
+                        const Icon(Icons.check_circle, size: 18),
+                        const SizedBox(width: 8),
                         DropdownButton<String>(
                           value: _selectedStatusFilter,
                           items: ['Status', 'On Track', 'Missed']
@@ -130,13 +132,13 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Medication List Section
             Column(
               children: filteredMeds.map((med) {
                 return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8),
+                  margin: const EdgeInsets.symmetric(vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -144,7 +146,7 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                   color: AppTheme.lightCardGreen,
                   child: ListTile(
                     title: Text(med['name'],
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(
                       '${med['dosage']} • ${med['schedule']}',
                       style: TextStyle(color: Colors.grey[600]),
@@ -153,13 +155,13 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue),
+                          icon: const Icon(Icons.edit, color: Colors.blue),
                           onPressed: () {
                             // Edit logic
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () {
                             // Delete logic
                             setState(() {
@@ -183,12 +185,12 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
           // Navigate to Add Screen
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AddScreen()),
+            MaterialPageRoute(builder: (context) => const AddScreen()),
           );
         },
-        child: Icon(Icons.add),
         foregroundColor: AppTheme.whiteColor,
         backgroundColor: Theme.of(context).primaryColor,
+        child: const Icon(Icons.add),
       ),
     );
   }

@@ -4,6 +4,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 
 class ZiraAIScreen extends StatefulWidget {
+  const ZiraAIScreen({super.key});
+
   @override
   _ZiraAIState createState() => _ZiraAIState();
 }
@@ -90,7 +92,7 @@ class _ZiraAIState extends State<ZiraAIScreen> {
           // Chat messages
           Expanded(
             child: ListView.builder(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
@@ -114,8 +116,8 @@ class _ZiraAIState extends State<ZiraAIScreen> {
                         ),
                       Flexible(
                         child: Container(
-                          margin: EdgeInsets.symmetric(vertical: 5),
-                          padding: EdgeInsets.all(12),
+                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color:
                                 isUser ? Colors.green[100] : Colors.grey[200],
@@ -123,7 +125,7 @@ class _ZiraAIState extends State<ZiraAIScreen> {
                           ),
                           child: Text(
                             message['content']!,
-                            style: TextStyle(fontSize: 16),
+                            style: const TextStyle(fontSize: 16),
                           ),
                         ),
                       ),
@@ -137,16 +139,16 @@ class _ZiraAIState extends State<ZiraAIScreen> {
           // Pre-chat suggestions (always visible just above the input field)
           if (_messages.isEmpty)
             Container(
-              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
               color: Colors.grey[100],
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     "Hi there! I’m Zira AI, your drug assistant. Ask me anything about drugs!",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 8.0,
                     runSpacing: 8.0,
@@ -158,14 +160,14 @@ class _ZiraAIState extends State<ZiraAIScreen> {
                         child: Chip(
                           label: Text(
                             suggestion,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 14,
                             ),
                           ),
                           backgroundColor: Theme.of(context).primaryColor,
                           padding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
                       );
                     }).toList(),
@@ -190,17 +192,17 @@ class _ZiraAIState extends State<ZiraAIScreen> {
                     },
                     decoration: InputDecoration(
                       hintText: 'Type your message...',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                       focusedBorder: OutlineInputBorder(
                         borderSide:
                             BorderSide(color: Theme.of(context).primaryColor),
                       ),
                       contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 IconButton(
                   icon: Icon(Icons.send, color: Theme.of(context).primaryColor),
                   onPressed: () {

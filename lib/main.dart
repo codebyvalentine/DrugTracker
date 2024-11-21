@@ -7,16 +7,18 @@ Future<void> main() async {
   // Load .env file before running the app
   await dotenv.load(fileName: ".env");
 
-  runApp(PrescribrApp());
+  runApp(const PrescribrApp());
 }
 
 class PrescribrApp extends StatelessWidget {
+  const PrescribrApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme, // Use the light theme
-      home: HomeScreen(),
+      home: const HomeScreen(),
     );
   }
 }

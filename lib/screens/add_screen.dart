@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../utils/theme.dart';
 
 class AddScreen extends StatefulWidget {
+  const AddScreen({super.key});
+
   @override
   _AddScreenState createState() => _AddScreenState();
 }
@@ -34,18 +36,18 @@ class _AddScreenState extends State<AddScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Step 1: Drug Details
-            Text(
+            const Text(
               "Step 1: Drug Details",
               style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10.0),
             TextField(
               controller: drugNameController,
               decoration: InputDecoration(
                 labelText: 'Drug Name',
                 hintText: 'Enter the name of the drug',
-                hintStyle: TextStyle(color: AppTheme.blackColor),
-                labelStyle: TextStyle(color: AppTheme.blackColor),
+                hintStyle: const TextStyle(color: AppTheme.blackColor),
+                labelStyle: const TextStyle(color: AppTheme.blackColor),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Theme.of(context).primaryColor),
                 ),
@@ -54,14 +56,14 @@ class _AddScreenState extends State<AddScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10.0),
             TextField(
               controller: dosageController,
               decoration: InputDecoration(
                 labelText: 'Dosage (Optional)',
                 hintText: 'Enter dosage (e.g., 50mg)',
-                hintStyle: TextStyle(color: AppTheme.blackColor),
-                labelStyle: TextStyle(color: AppTheme.blackColor),
+                hintStyle: const TextStyle(color: AppTheme.blackColor),
+                labelStyle: const TextStyle(color: AppTheme.blackColor),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Theme.of(context).primaryColor),
                 ),
@@ -70,19 +72,19 @@ class _AddScreenState extends State<AddScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 30.0),
+            const SizedBox(height: 30.0),
 
             // Step 2: Schedule
-            Text(
+            const Text(
               "Step 2: Schedule",
               style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10.0),
             // Frequency options
             Column(
               children: [
                 ListTile(
-                  title: Text("Once Daily"),
+                  title: const Text("Once Daily"),
                   leading: Radio<String>(
                     value: 'Once Daily',
                     groupValue: frequency,
@@ -96,7 +98,7 @@ class _AddScreenState extends State<AddScreen> {
                   ),
                 ),
                 ListTile(
-                  title: Text("Twice Daily"),
+                  title: const Text("Twice Daily"),
                   leading: Radio<String>(
                     value: 'Twice Daily',
                     groupValue: frequency,
@@ -110,7 +112,7 @@ class _AddScreenState extends State<AddScreen> {
                   ),
                 ),
                 ListTile(
-                  title: Text("Every 8 Hours"),
+                  title: const Text("Every 8 Hours"),
                   leading: Radio<String>(
                     value: 'Every 8 Hours',
                     groupValue: frequency,
@@ -124,7 +126,7 @@ class _AddScreenState extends State<AddScreen> {
                   ),
                 ),
                 ListTile(
-                  title: Text("Custom Frequency"),
+                  title: const Text("Custom Frequency"),
                   leading: Radio<String>(
                     value: 'Custom',
                     groupValue: frequency,
@@ -142,15 +144,15 @@ class _AddScreenState extends State<AddScreen> {
 
             // Show custom frequency fields when 'Custom' is selected
             if (isCustomFrequency) ...[
-              SizedBox(height: 10.0),
+              const SizedBox(height: 10.0),
               TextField(
                 controller: pillsController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'How many pills?',
                   hintText: 'Enter number of pills',
-                  hintStyle: TextStyle(color: AppTheme.blackColor),
-                  labelStyle: TextStyle(color: AppTheme.blackColor),
+                  hintStyle: const TextStyle(color: AppTheme.blackColor),
+                  labelStyle: const TextStyle(color: AppTheme.blackColor),
                   enabledBorder: OutlineInputBorder(
                     borderSide:
                         BorderSide(color: Theme.of(context).primaryColor),
@@ -161,7 +163,7 @@ class _AddScreenState extends State<AddScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 10.0),
+              const SizedBox(height: 10.0),
               Row(
                 children: [
                   Expanded(
@@ -172,8 +174,8 @@ class _AddScreenState extends State<AddScreen> {
                       decoration: InputDecoration(
                         labelText: 'Enter interval (e.g., 6)',
                         hintText: 'e.g., 6 hours or days',
-                        hintStyle: TextStyle(color: AppTheme.blackColor),
-                        labelStyle: TextStyle(color: AppTheme.blackColor),
+                        hintStyle: const TextStyle(color: AppTheme.blackColor),
+                        labelStyle: const TextStyle(color: AppTheme.blackColor),
                         enabledBorder: OutlineInputBorder(
                           borderSide:
                               BorderSide(color: Theme.of(context).primaryColor),
@@ -185,7 +187,7 @@ class _AddScreenState extends State<AddScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 10.0),
+                  const SizedBox(width: 10.0),
                   Expanded(
                     flex: 2,
                     child: DropdownButtonFormField<String>(
@@ -222,12 +224,12 @@ class _AddScreenState extends State<AddScreen> {
             ],
 
             // Step 3: Duration and Notes
-            SizedBox(height: 30.0),
-            Text(
+            const SizedBox(height: 30.0),
+            const Text(
               "Step 3: Duration and Notes",
               style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10.0),
             Row(
               children: [
                 Expanded(
@@ -237,8 +239,8 @@ class _AddScreenState extends State<AddScreen> {
                     decoration: InputDecoration(
                       labelText: 'Enter duration',
                       hintText: 'e.g., 30',
-                      hintStyle: TextStyle(color: AppTheme.blackColor),
-                      labelStyle: TextStyle(color: AppTheme.blackColor),
+                      hintStyle: const TextStyle(color: AppTheme.blackColor),
+                      labelStyle: const TextStyle(color: AppTheme.blackColor),
                       enabledBorder: OutlineInputBorder(
                         borderSide:
                             BorderSide(color: Theme.of(context).primaryColor),
@@ -252,7 +254,7 @@ class _AddScreenState extends State<AddScreen> {
                         !isIndefinite, // Disable input when indefinite is selected
                   ),
                 ),
-                SizedBox(width: 10.0),
+                const SizedBox(width: 10.0),
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: durationUnit,
@@ -286,7 +288,7 @@ class _AddScreenState extends State<AddScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10.0),
             Row(
               children: [
                 Checkbox(
@@ -302,20 +304,20 @@ class _AddScreenState extends State<AddScreen> {
                   },
                   activeColor: Theme.of(context).primaryColor,
                 ),
-                Text(
+                const Text(
                   'Indefinite',
                   style: TextStyle(color: AppTheme.blackColor),
                 ),
               ],
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10.0),
             TextField(
               controller: notesController,
               decoration: InputDecoration(
                 labelText: 'Additional Notes',
                 hintText: 'Any special instructions?',
-                hintStyle: TextStyle(color: AppTheme.blackColor),
-                labelStyle: TextStyle(color: AppTheme.blackColor),
+                hintStyle: const TextStyle(color: AppTheme.blackColor),
+                labelStyle: const TextStyle(color: AppTheme.blackColor),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Theme.of(context).primaryColor),
                 ),
@@ -324,20 +326,20 @@ class _AddScreenState extends State<AddScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 30.0),
+            const SizedBox(height: 30.0),
             ElevatedButton(
               onPressed: () {
                 // Save medication logic goes here
               },
-              child: Text("Save Medication"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
-                padding: EdgeInsets.symmetric(vertical: 14.0),
+                padding: const EdgeInsets.symmetric(vertical: 14.0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
                 elevation: 4,
               ),
+              child: const Text("Save Medication"),
             ),
           ],
         ),
