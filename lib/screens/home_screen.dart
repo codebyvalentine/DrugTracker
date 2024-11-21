@@ -4,8 +4,6 @@ import 'package:main/screens/profile_screen.dart';
 import 'add_screen.dart';
 import 'zira_ai.dart';
 import 'my_meds_screen.dart';
-import 'login_screen.dart';
-import 'profile_screen.dart';
 import '../widgets/navigation_bar.dart';
 import '../widgets/top_bar.dart';
 import '../utils/theme.dart';
