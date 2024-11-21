@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "210087565710",
+    "project_id": "prescribr-4aa4f",
+    "storage_bucket": "prescribr-4aa4f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:210087565710:android:6a58eb088b40a653d8ecdf",
+        "android_client_info": {
+          "package_name": "ca.prescribr.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "210087565710-4mf3165b4tc8r9cqoo1rhsjtud1of7ba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ca.prescribr.app",
+            "certificate_hash": "961eafab89b1ba1a6e9c72da2dbcf210287cbe39"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbtOTPy7NNf6mFjYs3clqREkfSipwyRpA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
