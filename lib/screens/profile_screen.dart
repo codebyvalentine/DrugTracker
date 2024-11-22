@@ -31,10 +31,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final User? user = _auth.currentUser;
     if (user != null) {
       try {
-        await _firestore.collection('users').doc(user.uid).update({
+        await _firestore.collection('users').doc(user.uid).set({
           'firstName': _firstNameController.text,
           'lastName': _lastNameController.text,
-        });
+        }, SetOptions(merge: true));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Profile updated successfully")),
         );
@@ -96,6 +96,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final User? user = _auth.currentUser;
     if (user != null) {
       try {
+        // delete auth user
+        await user.delete();
+
+        // delete medications
         final QuerySnapshot medicationsSnapshot = await _firestore
             .collection('medications')
             .doc(user.uid)
@@ -105,11 +109,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           await doc.reference.delete();
         }
 
+        // delete user profile
         await _firestore.collection('users').doc(user.uid).delete();
-        await user.delete();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Profile deleted successfully")),
+         const SnackBar(content: Text("Profile deleted successfully")),
         );
         Navigator.pushAndRemoveUntil(
           context,
