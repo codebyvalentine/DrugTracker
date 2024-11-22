@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:main/screens/login_screen.dart';
-import 'package:main/screens/profile_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_screen.dart';
+import 'profile_screen.dart';
 import 'add_screen.dart';
 import 'zira_ai.dart';
 import 'my_meds_screen.dart';
@@ -9,14 +10,25 @@ import '../widgets/top_bar.dart';
 import '../utils/theme.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int initialIndex;
+
+  const HomeScreen({super.key, this.initialIndex = 0});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
+class HomeScreenContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text('Home Screen Content'),
+    );
+  }
+}
+
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   String _greeting = '';
   final List<Map<String, String>> _upcomingMeds = [
     {'name': 'Paracetamol', 'time': '8:00 AM'},
@@ -25,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   final List<Widget> _screens = [
-    HomeScreenContent(), // Home Screen content
+    HomeScreenContent(),
     const AddScreen(),
     const MyMedsScreen(),
     const ZiraAIScreen(),
@@ -36,7 +48,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex;
     _setGreeting();
+    _checkLoginStatus();
   }
 
   void _setGreeting() {
@@ -49,6 +63,21 @@ class _HomeScreenState extends State<HomeScreen> {
       _greeting = 'Good Evening';
     } else {
       _greeting = 'Good Night';
+    }
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // User is not logged in, redirect to login screen
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+
+      if (result != true) {
+        // If login was not successful, navigate back
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -74,85 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         onTabChanged: _onTabChanged,
       ),
-    );
-  }
-}
-
-// HomeScreenContent Widget for the greeting and upcoming medications
-class HomeScreenContent extends StatelessWidget {
-  final String greeting;
-  final List<Map<String, String>> upcomingMeds;
-
-  HomeScreenContent({
-    super.key,
-  })  : greeting = "Good Morning, Jack!", // Set the greeting message here
-        upcomingMeds = [
-          {'name': 'Paracetamol', 'time': '8:00 AM'},
-          {'name': 'Ibuprofen', 'time': '12:00 PM'},
-          {'name': 'Aspirin', 'time': '5:00 PM'},
-        ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Greeting Message
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            greeting,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-        ),
-        // Upcoming Medications Section
-        const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            'Upcoming Medications',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ),
-        // Upcoming Medications List
-        Expanded(
-          child: ListView.builder(
-            itemCount: upcomingMeds.length,
-            itemBuilder: (context, index) {
-              final medication = upcomingMeds[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                color: AppTheme.lightCardGreen, // Custom green card background
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  title: Text(
-                    medication['name']!,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    'Time: ${medication['time']}',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  trailing: Icon(
-                    Icons.alarm,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  onTap: () {
-                    // Placeholder for navigation to medication detail page
-                    // You can navigate to a specific page here
-                  },
-                ),
-              );
-            },
-          ),
-        ),
-      ],
     );
   }
 }
