@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'home_screen.dart';
 import 'my_meds_screen.dart';
 import '../utils/theme.dart';
 
@@ -77,13 +78,15 @@ class _AddScreenState extends State<AddScreen> {
           'notes': notesController.text,
         });
 
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Medication saved successfully")),
         );
+
         if (context.mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => MyMedsScreen()),
+            MaterialPageRoute(
+              builder: (context) => HomeScreen(initialIndex: 2), // Set initialIndex to 2 for MyMedsScreen
+            ),
           );
         }
       } catch (e) {
