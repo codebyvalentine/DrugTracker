@@ -135,19 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: const Text("Don't have an account? Register now"),
                 ),
-              ),
-          //temporal profile link for testing
-          Center(
-            child: TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                );
-              },
-              child: const Text("Go to Profile Screen"),
-            ),
-          ),
+              )
             ],
           ),
         ),

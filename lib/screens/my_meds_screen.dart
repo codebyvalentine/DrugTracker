@@ -13,52 +13,32 @@ class MyMedsScreen extends StatefulWidget {
 class _MyMedsScreenState extends State<MyMedsScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  List<Map<String, dynamic>> _medications = [];
-  bool _isLoading = true;
 
   String _searchQuery = '';
   String _selectedTimeFilter = 'Time';
   String _selectedStatusFilter = 'Status';
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchMedications();
-  }
-
-  Future<void> _fetchMedications() async {
+  Future<List<Map<String, dynamic>>> _fetchMedications() async {
     final User? user = _auth.currentUser;
     if (user != null) {
-      try {
-        final QuerySnapshot medicationsSnapshot = await _firestore
-            .collection('medications')
-            .doc(user.uid)
-            .collection('userMedications')
-            .get();
-        final List<Map<String, dynamic>> medications = medicationsSnapshot.docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return {
-            'id': doc.id,
-            'name': data['drugName'] ?? 'Unknown',
-            'dosage': data['dosage'] ?? 'Unknown',
-            'schedule': data['frequency'] ?? 'Unknown',
-            'time': data['time'] ?? 'Unknown',
-            'status': data['status'] ?? 'Unknown',
-          };
-        }).toList();
-        setState(() {
-          _medications = medications;
-          _isLoading = false;
-        });
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to load medications: $e")),
-        );
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      final QuerySnapshot medicationsSnapshot = await _firestore
+          .collection('medications')
+          .doc(user.uid)
+          .collection('userMedications')
+          .get();
+      return medicationsSnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return {
+          'id': doc.id,
+          'name': data['drugName'] ?? 'Unknown',
+          'dosage': data['dosage'] ?? 'Unknown',
+          'schedule': data['frequency'] ?? 'Unknown',
+          'time': data['time'] ?? 'Unknown',
+          'status': data['status'] ?? 'Unknown',
+        };
+      }).toList();
     }
+    return [];
   }
 
   void _deleteMedication(Map<String, dynamic> med) async {
@@ -71,9 +51,7 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
             .collection('userMedications')
             .doc(med['id'])
             .delete();
-        setState(() {
-          _medications.remove(med);
-        });
+        setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Medication deleted successfully")),
         );
@@ -114,22 +92,19 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredMeds = _medications.where((med) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          med['name'].toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesTime = _selectedTimeFilter == 'Time' ||
-          (_selectedTimeFilter == 'Morning' && med['time'].contains('AM')) ||
-          (_selectedTimeFilter == 'Evening' && med['time'].contains('PM'));
-      final matchesStatus = _selectedStatusFilter == 'Status' ||
-          (_selectedStatusFilter == 'On Track' && med['status'] == 'on track') ||
-          (_selectedStatusFilter == 'Missed' && med['status'] == 'missed');
-      return matchesSearch && matchesTime && matchesStatus;
-    }).toList();
-
     return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _fetchMedications(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text("No medications found"));
+          } else {
+            final medications = snapshot.data!;
+            return SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,9 +128,9 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                           value: _selectedTimeFilter,
                           items: ['Time', 'Morning', 'Evening']
                               .map((filter) => DropdownMenuItem(
-                                    value: filter,
-                                    child: Text(filter),
-                                  ))
+                            value: filter,
+                            child: Text(filter),
+                          ))
                               .toList(),
                           onChanged: (value) => setState(() {
                             _selectedTimeFilter = value!;
@@ -175,9 +150,9 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                           value: _selectedStatusFilter,
                           items: ['Status', 'On Track', 'Missed']
                               .map((filter) => DropdownMenuItem(
-                                    value: filter,
-                                    child: Text(filter),
-                                  ))
+                            value: filter,
+                            child: Text(filter),
+                          ))
                               .toList(),
                           onChanged: (value) => setState(() {
                             _selectedStatusFilter = value!;
@@ -195,7 +170,7 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Column(
-                    children: filteredMeds.map((med) {
+                    children: medications.map((med) {
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         shape: RoundedRectangleBorder(
@@ -238,7 +213,10 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                   ),
                 ],
               ),
-            ),
+            );
+          }
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(

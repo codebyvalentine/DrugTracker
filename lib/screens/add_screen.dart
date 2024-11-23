@@ -3,15 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main_screen.dart';
-import 'my_meds_screen.dart';
 
 class AddScreen extends StatefulWidget {
   final Map<String, dynamic>? medication;
 
-  const AddScreen({Key? key, this.medication}) : super(key: key);
+  const AddScreen({super.key, this.medication});
 
   @override
-  _AddScreenState createState() => _AddScreenState();
+  State<AddScreen> createState() => _AddScreenState();
 }
 
 class _AddScreenState extends State<AddScreen> {
