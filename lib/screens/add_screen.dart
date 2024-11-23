@@ -2,9 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home_screen.dart';
+import 'main_screen.dart';
 import 'my_meds_screen.dart';
-import '../utils/theme.dart';
 
 class AddScreen extends StatefulWidget {
   final Map<String, dynamic>? medication;
@@ -85,7 +84,7 @@ class _AddScreenState extends State<AddScreen> {
         if (context.mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => HomeScreen(initialIndex: 2), // Set initialIndex to 2 for MyMedsScreen
+              builder: (context) => MainScreen(initialIndex: 2), // Set initialIndex to 2 for MyMedsScreen
             ),
           );
         }

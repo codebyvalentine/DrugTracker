@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'home_screen.dart';
+import 'main_screen.dart';
 import 'register_screen.dart';
 import 'profile_screen.dart';
 
@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Navigate to HomeScreen (this does not work yet)
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            MaterialPageRoute(builder: (context) => const MainScreen()),
           );
         }
       } on FirebaseAuthException catch (e) {
