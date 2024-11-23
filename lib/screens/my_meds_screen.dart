@@ -75,7 +75,7 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
           _medications.remove(med);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Medication deleted successfully")),
+          const SnackBar(content: Text("Medication deleted successfully")),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -90,21 +90,21 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text("Are you sure you want to delete this medication?"),
+          title: const Text("Confirm Delete"),
+          content: const Text("Are you sure you want to delete this medication?"),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _deleteMedication(med);
               },
-              child: Text("Delete"),
+              child: const Text("Delete"),
             ),
           ],
         );
