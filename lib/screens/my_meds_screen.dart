@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../utils/theme.dart';
-import 'add_screen.dart';
 
 class MyMedsScreen extends StatefulWidget {
   const MyMedsScreen({super.key});
@@ -15,10 +14,6 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   List<Map<String, dynamic>> _medications = [];
   bool _isLoading = true;
-
-  String _searchQuery = '';
-  String _selectedTimeFilter = 'Time';
-  String _selectedStatusFilter = 'Status';
 
   @override
   void initState() {
@@ -35,22 +30,33 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
             .doc(user.uid)
             .collection('userMedications')
             .get();
-        final List<Map<String, dynamic>> medications = medicationsSnapshot.docs.map((doc) {
+        final List<Map<String, dynamic>> medications = [];
+
+        for (var doc in medicationsSnapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
-          return {
+          final schedulesSnapshot = await doc.reference.collection('schedules').get();
+          final List<String> times = schedulesSnapshot.docs.map((scheduleDoc) {
+            final scheduleData = scheduleDoc.data() as Map<String, dynamic>;
+            return '${scheduleData['time'] ?? 'Unknown'} (${scheduleData['frequency'] ?? 'Unknown'})';
+          }).toList().cast<String>();
+
+          medications.add({
             'id': doc.id,
             'name': data['drugName'] ?? 'Unknown',
-            'dosage': data['dosage'] ?? 'Unknown',
-            'schedule': data['frequency'] ?? 'Unknown',
-            'time': data['time'] ?? 'Unknown',
-            'status': data['status'] ?? 'Unknown',
-          };
-        }).toList();
+            'quantity': data['pills'] ?? 'Unknown',
+            'time': times.join('\nTime: '),
+            'dosage': data['dosage'] ?? '',
+            'endDate': data['endDate'] ?? '',
+            'note': data['note'] ?? '',
+          });
+        }
+
         setState(() {
           _medications = medications;
           _isLoading = false;
         });
       } catch (e) {
+        print("Error fetching medications: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to load medications: $e")),
         );
@@ -58,6 +64,11 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
           _isLoading = false;
         });
       }
+    } else {
+      print("User is not logged in");
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -78,10 +89,13 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
           SnackBar(content: Text("Medication deleted successfully")),
         );
       } catch (e) {
+        print("Error deleting medication: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to delete medication: $e")),
         );
       }
+    } else {
+      print("User is not logged in");
     }
   }
 
@@ -112,90 +126,74 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
     );
   }
 
+  void _showDetailsPopup(Map<String, dynamic> med) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            med['name'],
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                _buildDetailRow('Quantity', med['quantity']),
+                _buildDetailRow('Time', med['time']),
+                if (med['dosage'].isNotEmpty) _buildDetailRow('Dosage', med['dosage']),
+                if (med['endDate'].isNotEmpty) _buildDetailRow('End Date', med['endDate']),
+                if (med['note'].isNotEmpty) _buildDetailRow('Note', med['note']),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Close", style: TextStyle(color: Theme.of(context).primaryColor)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
-    final filteredMeds = _medications.where((med) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          med['name'].toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesTime = _selectedTimeFilter == 'Time' ||
-          (_selectedTimeFilter == 'Morning' && med['time'].contains('AM')) ||
-          (_selectedTimeFilter == 'Evening' && med['time'].contains('PM'));
-      final matchesStatus = _selectedStatusFilter == 'Status' ||
-          (_selectedStatusFilter == 'On Track' && med['status'] == 'on track') ||
-          (_selectedStatusFilter == 'Missed' && med['status'] == 'missed');
-      return matchesSearch && matchesTime && matchesStatus;
-    }).toList();
-
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Medications'),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    onChanged: (value) => setState(() {
-                      _searchQuery = value;
-                    }),
-                    decoration: InputDecoration(
-                      hintText: 'Search medications...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedTimeFilter,
-                          items: ['Time', 'Morning', 'Evening']
-                              .map((filter) => DropdownMenuItem(
-                                    value: filter,
-                                    child: Text(filter),
-                                  ))
-                              .toList(),
-                          onChanged: (value) => setState(() {
-                            _selectedTimeFilter = value!;
-                          }),
-                          decoration: InputDecoration(
-                            labelText: 'Time',
-                            prefixIcon: const Icon(Icons.access_time),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedStatusFilter,
-                          items: ['Status', 'On Track', 'Missed']
-                              .map((filter) => DropdownMenuItem(
-                                    value: filter,
-                                    child: Text(filter),
-                                  ))
-                              .toList(),
-                          onChanged: (value) => setState(() {
-                            _selectedStatusFilter = value!;
-                          }),
-                          decoration: InputDecoration(
-                            labelText: 'Status',
-                            prefixIcon: const Icon(Icons.check_circle),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Column(
-                    children: filteredMeds.map((med) {
+          : _medications.isEmpty
+              ? const Center(child: Text('You have no medications added'))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: _medications.map((med) {
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         shape: RoundedRectangleBorder(
@@ -204,24 +202,21 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                         elevation: 4,
                         color: AppTheme.lightCardGreen,
                         child: ListTile(
-                          title: Text(med['name'],
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                          title: Text(
+                            med['name'],
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           subtitle: Text(
-                            '${med['dosage']} • ${med['schedule']}',
+                            'Quantity: ${med['quantity']}\nTime: ${med['time']}',
                             style: TextStyle(color: Colors.grey[600]),
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                icon: const Icon(Icons.visibility, color: Colors.blue),
                                 onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => AddScreen(medication: med),
-                                    ),
-                                  );
+                                  _showDetailsPopup(med);
                                 },
                               ),
                               IconButton(
@@ -236,20 +231,7 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
                       );
                     }).toList(),
                   ),
-                ],
-              ),
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddScreen()),
-          );
-        },
-        foregroundColor: AppTheme.whiteColor,
-        backgroundColor: Theme.of(context).primaryColor,
-        child: const Icon(Icons.add),
-      ),
+                ),
     );
   }
 }
