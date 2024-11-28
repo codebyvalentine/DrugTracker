@@ -37,8 +37,15 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
           final schedulesSnapshot = await doc.reference.collection('schedules').get();
           final List<String> times = schedulesSnapshot.docs.map((scheduleDoc) {
             final scheduleData = scheduleDoc.data() as Map<String, dynamic>;
-            return '${scheduleData['time'] ?? 'Unknown'} (${scheduleData['frequency'] ?? 'Unknown'})';
+            final Timestamp timeStamp = scheduleData['time'];
+            final DateTime dateTime = timeStamp.toDate();
+            final String formattedTime = '${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+            return '$formattedTime (${scheduleData['frequency'] ?? 'Unknown'})';
           }).toList().cast<String>();
+
+          final Timestamp endDateTimestamp = data['endDate'];
+          final DateTime endDate = endDateTimestamp.toDate();
+          final String formattedEndDate = '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}';
 
           medications.add({
             'id': doc.id,
@@ -46,7 +53,7 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
             'quantity': data['pills'] ?? 'Unknown',
             'time': times.join('\nTime: '),
             'dosage': data['dosage'] ?? '',
-            'endDate': data['endDate'] ?? '',
+            'endDate': formattedEndDate,
             'note': data['note'] ?? '',
           });
         }
@@ -179,6 +186,7 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -188,50 +196,50 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _medications.isEmpty
-              ? const Center(child: Text('You have no medications added'))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _medications.map((med) {
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 4,
-                        color: AppTheme.lightCardGreen,
-                        child: ListTile(
-                          title: Text(
-                            med['name'],
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            'Quantity: ${med['quantity']}\nTime: ${med['time']}',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.visibility, color: Colors.blue),
-                                onPressed: () {
-                                  _showDetailsPopup(med);
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {
-                                  _confirmDeleteMedication(med);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+          ? const Center(child: Text('You have no medications added'))
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: _medications.map((med) {
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+              color: AppTheme.lightCardGreen,
+              child: ListTile(
+                title: Text(
+                  med['name'],
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
+                subtitle: Text(
+                  'Quantity: ${med['quantity']}\nTime: ${med['time']}',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.visibility, color: Colors.blue),
+                      onPressed: () {
+                        _showDetailsPopup(med);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        _confirmDeleteMedication(med);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 }

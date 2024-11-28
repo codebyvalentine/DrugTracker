@@ -503,7 +503,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 }
 
 // ConfirmScreen starts here
-class ConfirmScreen extends StatelessWidget {
+
+
+class ConfirmScreen extends StatefulWidget {
   final String drugName;
   final String dosage;
   final String pills;
@@ -523,6 +525,11 @@ class ConfirmScreen extends StatelessWidget {
     this.note,
   }) : super(key: key);
 
+  @override
+  _ConfirmScreenState createState() => _ConfirmScreenState();
+}
+
+class _ConfirmScreenState extends State<ConfirmScreen> {
   Future<void> _saveToDatabase(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -535,18 +542,38 @@ class ConfirmScreen extends StatelessWidget {
         .doc(user.uid)
         .collection('userMedications');
 
+    final DateTime now = DateTime.now();
+    final DateTime endDate = widget.endDate != null && widget.endDate!.isNotEmpty
+        ? DateTime.parse(widget.endDate!)
+        : now.add(Duration(days: 365 * 2));
+
     DocumentReference medicationRef = await medications.add({
-      'drugName': drugName,
-      'dosage': dosage,
-      'pills': pills,
-      'form': form,
-      'endDate': endDate,
-      'note': note,
+      'drugName': widget.drugName,
+      'dosage': widget.dosage,
+      'pills': widget.pills,
+      'form': widget.form,
+      'endDate': Timestamp.fromDate(endDate),
+      'note': widget.note,
+      'dateAdded': Timestamp.fromDate(now),
     });
 
-    for (var schedule in schedules) {
+    for (var schedule in widget.schedules) {
+      final timeParts = schedule['time']!.split(' ');
+      final period = timeParts[1];
+      final timeOfDay = TimeOfDay(
+        hour: int.parse(timeParts[0].split(':')[0]) + (period == 'PM' ? 12 : 0),
+        minute: int.parse(timeParts[0].split(':')[1]),
+      );
+      final DateTime scheduleTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        timeOfDay.hour,
+        timeOfDay.minute,
+      );
+
       await medicationRef.collection('schedules').add({
-        'time': schedule['time'],
+        'time': Timestamp.fromDate(scheduleTime),
         'frequency': schedule['frequency'],
       });
     }
@@ -555,7 +582,7 @@ class ConfirmScreen extends StatelessWidget {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => MyMedsScreen()),
-      (Route<dynamic> route) => false,
+          (Route<dynamic> route) => false,
     );
   }
 
@@ -589,13 +616,13 @@ class ConfirmScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 5.0),
                     Text(
-                      drugName,
+                      widget.drugName,
                       style: TextStyle(
                         fontSize: 16.0,
                         color: Colors.grey[700],
                       ),
                     ),
-                    if (dosage.isNotEmpty) ...[
+                    if (widget.dosage.isNotEmpty) ...[
                       const SizedBox(height: 15.0),
                       Text(
                         'Dosage',
@@ -606,7 +633,7 @@ class ConfirmScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 5.0),
                       Text(
-                        dosage,
+                        widget.dosage,
                         style: TextStyle(
                           fontSize: 16.0,
                           color: Colors.grey[700],
@@ -623,7 +650,7 @@ class ConfirmScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 5.0),
                     Text(
-                      pills,
+                      widget.pills,
                       style: TextStyle(
                         fontSize: 16.0,
                         color: Colors.grey[700],
@@ -639,7 +666,7 @@ class ConfirmScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 5.0),
                     Text(
-                      form,
+                      widget.form,
                       style: TextStyle(
                         fontSize: 16.0,
                         color: Colors.grey[700],
@@ -654,7 +681,7 @@ class ConfirmScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 5.0),
-                    ...schedules.map((schedule) => Padding(
+                    ...widget.schedules.map((schedule) => Padding(
                       padding: const EdgeInsets.only(bottom: 10.0),
                       child: Text(
                         'Time: ${schedule['time']}, Frequency: ${schedule['frequency']}',
@@ -664,7 +691,7 @@ class ConfirmScreen extends StatelessWidget {
                         ),
                       ),
                     )),
-                    if (endDate != null && endDate!.isNotEmpty) ...[
+                    if (widget.endDate != null && widget.endDate!.isNotEmpty) ...[
                       const SizedBox(height: 15.0),
                       Text(
                         'End Date',
@@ -675,14 +702,14 @@ class ConfirmScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 5.0),
                       Text(
-                        endDate!,
+                        widget.endDate!,
                         style: TextStyle(
                           fontSize: 16.0,
                           color: Colors.grey[700],
                         ),
                       ),
                     ],
-                    if (note != null && note!.isNotEmpty) ...[
+                    if (widget.note != null && widget.note!.isNotEmpty) ...[
                       const SizedBox(height: 15.0),
                       Text(
                         'Additional Note',
@@ -693,7 +720,7 @@ class ConfirmScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 5.0),
                       Text(
-                        note!,
+                        widget.note!,
                         style: TextStyle(
                           fontSize: 16.0,
                           color: Colors.grey[700],
