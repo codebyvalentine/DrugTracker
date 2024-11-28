@@ -23,56 +23,76 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
 
   Future<void> _fetchMedications() async {
     final User? user = _auth.currentUser;
-    if (user != null) {
-      try {
-        final QuerySnapshot medicationsSnapshot = await _firestore
-            .collection('medications')
-            .doc(user.uid)
-            .collection('userMedications')
-            .get();
-        final List<Map<String, dynamic>> medications = [];
+    if (user == null) return;
 
-        for (var doc in medicationsSnapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          final schedulesSnapshot = await doc.reference.collection('schedules').get();
-          final List<String> times = schedulesSnapshot.docs.map((scheduleDoc) {
-            final scheduleData = scheduleDoc.data() as Map<String, dynamic>;
-            final Timestamp timeStamp = scheduleData['time'];
-            final DateTime dateTime = timeStamp.toDate();
-            final String formattedTime = '${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
-            return '$formattedTime (${scheduleData['frequency'] ?? 'Unknown'})';
-          }).toList().cast<String>();
+    setState(() {
+      _isLoading = true;
+    });
 
-          final Timestamp endDateTimestamp = data['endDate'];
-          final DateTime endDate = endDateTimestamp.toDate();
-          final String formattedEndDate = '${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}';
+    try {
+      final QuerySnapshot medicationsSnapshot = await _firestore
+          .collection('medications')
+          .doc(user.uid)
+          .collection('userMedications')
+          .get();
 
-          medications.add({
-            'id': doc.id,
-            'name': data['drugName'] ?? 'Unknown',
-            'quantity': data['pills'] ?? 'Unknown',
-            'time': times.join('\nTime: '),
-            'dosage': data['dosage'] ?? '',
-            'endDate': formattedEndDate,
-            'note': data['note'] ?? '',
-          });
-        }
+      final List<Map<String, dynamic>> medications = [];
 
-        setState(() {
-          _medications = medications;
-          _isLoading = false;
-        });
-      } catch (e) {
-        print("Error fetching medications: $e");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to load medications: $e")),
-        );
-        setState(() {
-          _isLoading = false;
+      for (var doc in medicationsSnapshot.docs) {
+        final medicationData = doc.data() as Map<String, dynamic>?;
+
+        if (medicationData == null) continue;
+
+        final String drugName = medicationData['drugName'] ?? 'Unknown';
+        final String pills = medicationData['pills'] ?? 'Unknown';
+        final String form = medicationData['form'] ?? '';
+        final String dosage = medicationData['dosage'] ?? '';
+        final String note = medicationData['note'] ?? '';
+        final DateTime startDate = DateTime.parse(medicationData['startDate']);
+        final DateTime endDate = DateTime.parse(medicationData['endDate']);
+
+        // Fetch reminders
+        final QuerySnapshot remindersSnapshot =
+        await doc.reference.collection('reminders').get();
+
+        final List<Map<String, dynamic>> reminders = remindersSnapshot.docs
+            .map((reminderDoc) {
+          final reminderData = reminderDoc.data() as Map<String, dynamic>?;
+          if (reminderData == null) return null;
+
+          return {
+            'time': reminderData['time'],
+            'frequency': reminderData['frequency'] ?? 'Daily',
+            'startDate': reminderData['startDate'],
+            'endDate': reminderData['endDate'],
+          };
+        })
+            .where((reminder) => reminder != null)
+            .toList()
+            .cast<Map<String, dynamic>>();
+
+        medications.add({
+          'id': doc.id,
+          'drugName': drugName,
+          'pills': pills,
+          'form': form,
+          'dosage': dosage,
+          'note': note,
+          'startDate': startDate.toIso8601String(),
+          'endDate': endDate.toIso8601String(),
+          'reminders': reminders,
         });
       }
-    } else {
-      print("User is not logged in");
+
+      setState(() {
+        _medications = medications;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching medications: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load medications: $e")),
+      );
       setState(() {
         _isLoading = false;
       });
@@ -101,8 +121,6 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
           SnackBar(content: Text("Failed to delete medication: $e")),
         );
       }
-    } else {
-      print("User is not logged in");
     }
   }
 
@@ -139,17 +157,29 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
-            med['name'],
+            med['drugName'],
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           content: SingleChildScrollView(
             child: ListBody(
               children: [
-                _buildDetailRow('Quantity', med['quantity']),
-                _buildDetailRow('Time', med['time']),
+                _buildDetailRow('Quantity', med['pills']),
+                _buildDetailRow('Form', med['form']),
                 if (med['dosage'].isNotEmpty) _buildDetailRow('Dosage', med['dosage']),
-                if (med['endDate'].isNotEmpty) _buildDetailRow('End Date', med['endDate']),
+                _buildDetailRow('Start Date', med['startDate']),
+                _buildDetailRow('End Date', med['endDate']),
                 if (med['note'].isNotEmpty) _buildDetailRow('Note', med['note']),
+                const SizedBox(height: 16),
+                const Text(
+                  'Reminders',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                ...med['reminders'].map<Widget>((reminder) {
+                  return Text(
+                    'Time: ${reminder['time']}, Frequency: ${reminder['frequency']}',
+                    style: TextStyle(color: Colors.grey[700]),
+                  );
+                }).toList(),
               ],
             ),
           ),
@@ -211,11 +241,11 @@ class _MyMedsScreenState extends State<MyMedsScreen> {
               color: AppTheme.lightCardGreen,
               child: ListTile(
                 title: Text(
-                  med['name'],
+                  med['drugName'],
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
-                  'Quantity: ${med['quantity']}\nTime: ${med['time']}',
+                  'Quantity: ${med['pills']}\nForm: ${med['form']}',
                   style: TextStyle(color: Colors.grey[600]),
                 ),
                 trailing: Row(

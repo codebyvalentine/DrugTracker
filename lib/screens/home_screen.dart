@@ -29,6 +29,7 @@ class HomeScreenContent extends StatelessWidget {
   final VoidCallback onPreviousDate;
   final VoidCallback onNextDate;
   final List<Map<String, dynamic>> medications;
+  final bool isLoading;
 
   HomeScreenContent({
     required this.greeting,
@@ -37,64 +38,28 @@ class HomeScreenContent extends StatelessWidget {
     required this.onPreviousDate,
     required this.onNextDate,
     required this.medications,
+    required this.isLoading,
   });
 
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy');
-    final timeFormat = DateFormat('hh:mm a');
-    final now = DateTime.now();
-    final tomorrow = now.add(Duration(days: 1));
-    final yesterday = now.subtract(Duration(days: 1));
-
-    String dateString;
-    if (selectedDate.year == now.year &&
-        selectedDate.month == now.month &&
-        selectedDate.day == now.day) {
-      dateString = 'Today';
-    } else if (selectedDate.year == tomorrow.year &&
-        selectedDate.month == tomorrow.month &&
-        selectedDate.day == tomorrow.day) {
-      dateString = 'Tomorrow';
-    } else if (selectedDate.year == yesterday.year &&
-        selectedDate.month == yesterday.month &&
-        selectedDate.day == yesterday.day) {
-      dateString = 'Yesterday';
-    } else {
-      dateString = dateFormat.format(selectedDate);
-    }
-
-    // Split medications by individual times
-    final Map<String, List<Map<String, dynamic>>> groupedMedications = {};
-    for (var med in medications) {
-      final times = med['time'].split('\nTime: ');
-      for (var time in times) {
-        if (!groupedMedications.containsKey(time)) {
-          groupedMedications[time] = [];
-        }
-        groupedMedications[time]!.add({
-          'name': med['name'],
-          'quantity': med['quantity'],
-        });
-      }
-    }
-
-    // Sort the times
-    final sortedTimes = groupedMedications.keys.toList()
-      ..sort((a, b) => timeFormat.parse(a).compareTo(timeFormat.parse(b)));
 
     return SingleChildScrollView(
       child: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            // Greeting Text
             Padding(
-              padding: const EdgeInsets.only(left: 16.0),
+              padding: const EdgeInsets.only(left: 16.0, top: 16.0),
               child: Text(
                 '$greeting, $firstName',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
             ),
+
+            // Date Navigation
             SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -104,7 +69,7 @@ class HomeScreenContent extends StatelessWidget {
                   onPressed: onPreviousDate,
                 ),
                 Text(
-                  dateString,
+                  dateFormat.format(selectedDate),
                   style: TextStyle(fontSize: 20, color: Colors.grey[700]),
                 ),
                 IconButton(
@@ -113,44 +78,49 @@ class HomeScreenContent extends StatelessWidget {
                 ),
               ],
             ),
-            if (dateString == 'Today') ...sortedTimes.map((time) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
-                    child: Text(
-                      time,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+
+            // Loader
+            if (isLoading)
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0),
+                child: CircularProgressIndicator(),
+              )
+
+            // No Reminders Message
+            else if (medications.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0),
+                child: Text(
+                  'No reminders for this day.',
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+              )
+
+            // Display Reminders
+            else
+              ...medications.map((med) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                    color: Colors.white,
+                    child: ListTile(
+                      title: Text(
+                        med['name'],
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        'Quantity: ${med['quantity']}\nForm: ${med['form']}\nTime: ${DateFormat('hh:mm a').format(med['time'])}',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
                     ),
                   ),
-                  ...groupedMedications[time]!.map((med) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Card(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 4,
-                        color: Colors.white,
-                        child: ListTile(
-                          title: Text(
-                            med['name'],
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            'Quantity: ${med['quantity']}',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                  SizedBox(height: 24), // More spacing after each time section
-                ],
-              );
-            }).toList(),
+                );
+              }).toList(),
           ],
         ),
       ),
@@ -217,63 +187,110 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchMedications() async {
     final User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      int retryCount = 0;
-      const int maxRetries = 3;
-      while (retryCount < maxRetries) {
-        try {
-          final QuerySnapshot medicationsSnapshot = await FirebaseFirestore.instance
-              .collection('medications')
-              .doc(user.uid)
-              .collection('userMedications')
-              .get();
-          final List<Map<String, dynamic>> medications = [];
+    if (user == null) return;
 
-          for (var doc in medicationsSnapshot.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final schedulesSnapshot = await doc.reference.collection('schedules').get();
-            final List<String> times = schedulesSnapshot.docs.map((scheduleDoc) {
-              final scheduleData = scheduleDoc.data() as Map<String, dynamic>;
-              final Timestamp timeStamp = scheduleData['time'];
-              final DateTime dateTime = timeStamp.toDate();
-              final String formattedTime = DateFormat('hh:mm a').format(dateTime);
-              return '$formattedTime (${scheduleData['frequency'] ?? 'Unknown'})';
-            }).toList().cast<String>();
+    setState(() {
+      _isLoading = true;
+    });
 
-            final Timestamp endDateTimestamp = data['endDate'];
-            final DateTime endDate = endDateTimestamp.toDate();
-            final String formattedEndDate = DateFormat('yyyy-MM-dd').format(endDate);
+    try {
+      final medicationsSnapshot = await FirebaseFirestore.instance
+          .collection('medications')
+          .doc(user.uid)
+          .collection('userMedications')
+          .get();
 
-            medications.add({
-              'id': doc.id,
-              'name': data['drugName'] ?? 'Unknown',
-              'quantity': data['pills'] ?? 'Unknown',
-              'time': times.join('\nTime: '),
-              'dosage': data['dosage'] ?? '',
-              'endDate': formattedEndDate,
-              'note': data['note'] ?? '',
-            });
+      final List<Map<String, dynamic>> remindersForDay = [];
+      final DateTime startOfDay = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+      );
+
+      for (var medicationDoc in medicationsSnapshot.docs) {
+        final medicationData = medicationDoc.data();
+        if (medicationData == null) continue;
+
+        final remindersSnapshot = await medicationDoc.reference
+            .collection('reminders')
+            .get();
+
+        for (var reminderDoc in remindersSnapshot.docs) {
+          final reminderData = reminderDoc.data();
+          if (reminderData == null) continue;
+
+          final DateTime reminderStartDate = DateTime.parse(reminderData['startDate']);
+          final DateTime reminderEndDate = DateTime.parse(reminderData['endDate']);
+          final String frequency = reminderData['frequency'];
+          final String reminderTime = reminderData['time'];
+
+          // Ensure reminder is within start and end date range
+          if (_selectedDate.isBefore(reminderStartDate) ||
+              _selectedDate.isAfter(reminderEndDate)) {
+            continue;
           }
 
-          setState(() {
-            _medications = medications;
-            _isLoading = false;
-          });
-          break; // Exit the loop if successful
-        } catch (e) {
-          retryCount++;
-          if (retryCount >= maxRetries) {
-            print("Error fetching medications: $e");
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Failed to load medications: $e")),
+          // Frequency logic
+          bool shouldAddReminder = false;
+          if (frequency == 'Daily') {
+            shouldAddReminder = true;
+          } else if (frequency.startsWith('Every')) {
+            final daysInterval = int.parse(frequency.split(' ')[1]); // e.g., "Every 3 days"
+            final int daysSinceStart = _selectedDate.difference(reminderStartDate).inDays;
+
+            // Add reminder only if the current day aligns with the interval
+            if (daysSinceStart >= 0 && daysSinceStart % daysInterval == 0) {
+              shouldAddReminder = true;
+            }
+          }
+
+          if (shouldAddReminder) {
+            final reminderDateTime = DateTime(
+              startOfDay.year,
+              startOfDay.month,
+              startOfDay.day,
+              _parseTime(reminderTime).hour,
+              _parseTime(reminderTime).minute,
             );
-          } else {
-            await Future.delayed(Duration(seconds: 2)); // Wait before retrying
+
+            remindersForDay.add({
+              'name': medicationData['drugName'],
+              'quantity': medicationData['pills'],
+              'form': medicationData['form'],
+              'time': reminderDateTime,
+            });
           }
         }
       }
+
+      setState(() {
+        _medications = remindersForDay;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching medications: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load medications: $e")),
+      );
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+
+// Helper method to parse time strings (e.g., "4:12 PM")
+  TimeOfDay _parseTime(String time) {
+    final format = DateFormat.jm(); // "4:12 PM"
+    final DateTime dateTime = format.parse(time);
+    return TimeOfDay.fromDateTime(dateTime);
+  }
+
+
+
+
+
+
+
 
   void _previousDate() {
     setState(() {
@@ -305,6 +322,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onPreviousDate: _previousDate,
           onNextDate: _nextDate,
           medications: _medications,
+          isLoading: _isLoading,
         );
       case 1:
         return AddScreen();
@@ -320,6 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onPreviousDate: _previousDate,
           onNextDate: _nextDate,
           medications: _medications,
+          isLoading: _isLoading,
         );
     }
   }

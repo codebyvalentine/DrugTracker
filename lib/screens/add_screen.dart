@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'home_screen.dart';
 import 'my_meds_screen.dart';
 
 // AddScreen starts here
@@ -530,6 +531,7 @@ class ConfirmScreen extends StatefulWidget {
 }
 
 class _ConfirmScreenState extends State<ConfirmScreen> {
+
   Future<void> _saveToDatabase(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -547,44 +549,42 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
         ? DateTime.parse(widget.endDate!)
         : now.add(Duration(days: 365 * 2));
 
-    DocumentReference medicationRef = await medications.add({
+    // Save the main medication document
+    final DocumentReference medicationRef = await medications.add({
       'drugName': widget.drugName,
       'dosage': widget.dosage,
       'pills': widget.pills,
       'form': widget.form,
-      'endDate': Timestamp.fromDate(endDate),
+      'startDate': now.toIso8601String(),
+      'endDate': endDate.toIso8601String(),
       'note': widget.note,
-      'dateAdded': Timestamp.fromDate(now),
     });
 
+    // Save each schedule as a document in a `reminders` subcollection
     for (var schedule in widget.schedules) {
-      final timeParts = schedule['time']!.split(' ');
-      final period = timeParts[1];
-      final timeOfDay = TimeOfDay(
-        hour: int.parse(timeParts[0].split(':')[0]) + (period == 'PM' ? 12 : 0),
-        minute: int.parse(timeParts[0].split(':')[1]),
-      );
-      final DateTime scheduleTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        timeOfDay.hour,
-        timeOfDay.minute,
-      );
+      final String time = schedule['time'] ?? '12:00 AM';
+      final String frequency = schedule['frequency'] ?? 'daily';
 
-      await medicationRef.collection('schedules').add({
-        'time': Timestamp.fromDate(scheduleTime),
-        'frequency': schedule['frequency'],
+      // Save the schedule metadata as a separate document
+      await medicationRef.collection('reminders').add({
+        'time': time,
+        'frequency': frequency,
+        'startDate': now.toIso8601String(),
+        'endDate': endDate.toIso8601String(),
       });
     }
 
     // Redirect to MyMedsScreen
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => MyMedsScreen()),
+      MaterialPageRoute(
+        builder: (context) => HomeScreen(initialIndex: 2),
+      ),
           (Route<dynamic> route) => false,
     );
   }
+
+
 
   @override
   Widget build(BuildContext context) {
