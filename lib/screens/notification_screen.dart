@@ -1,33 +1,37 @@
 import 'package:flutter/material.dart';
-import '../widgets/top_bar.dart';
+import 'package:provider/provider.dart';
+import '../providers/notification_provider.dart';
 
 class NotificationScreen extends StatelessWidget {
-  const NotificationScreen({super.key});
+  const NotificationScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final notificationProvider = Provider.of<NotificationProvider>(context);
+
     return Scaffold(
-      appBar: TopBar(
-        isCloseButton: true, // Enable the close (X) button
-        onBack: () {
-          Navigator.pop(context); // Close the notification screen
-        },
+      appBar: AppBar(
+        title: const Text('Notifications'),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount:
-            10, // Replace with actual notification count from a data source
+      body: notificationProvider.notifications.isEmpty
+          ? const Center(
+        child: Text('No notifications yet.'),
+      )
+          : ListView.builder(
+        itemCount: notificationProvider.notifications.length,
         itemBuilder: (context, index) {
+          final notification = notificationProvider.notifications[index];
           return Card(
-            margin: const EdgeInsets.only(bottom: 12.0),
+            margin: const EdgeInsets.all(8.0),
             child: ListTile(
-              leading: const Icon(Icons.notifications, color: Colors.green),
-              title: Text("Notification Title $index"),
-              subtitle: Text("This is the description of notification $index."),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16.0),
-              onTap: () {
-                // Handle notification tap action
-              },
+              title: Text(notification['title'] ?? 'No Title'),
+              subtitle: Text(notification['body'] ?? 'No Body'),
+              trailing: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  notificationProvider.removeNotification(index);
+                },
+              ),
             ),
           );
         },

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/intl.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
 import 'add_screen.dart';
 import 'zira_ai.dart';
 import 'my_meds_screen.dart';
+import 'package:provider/provider.dart';
+import '../providers/notification_provider.dart';
 import '../widgets/navigation_bar.dart';
 import '../widgets/top_bar.dart';
 import '../utils/theme.dart';
@@ -129,6 +132,7 @@ class HomeScreenContent extends StatelessWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late FirebaseMessaging _firebaseMessaging;
   late int _selectedIndex;
   String _greeting = '';
   String _firstName = '';
@@ -139,12 +143,47 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeFirebaseMessaging();
     _selectedIndex = widget.initialIndex;
     _setGreeting();
     _checkLoginStatus();
     _fetchUserProfile();
     _fetchMedications();
   }
+
+  void _initializeFirebaseMessaging() async {
+    _firebaseMessaging = FirebaseMessaging.instance;
+
+    NotificationSettings settings = await _firebaseMessaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      provisional: false,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('User granted permission');
+    } else {
+      print('User declined or has not accepted permission');
+    }
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        final title = message.notification!.title ?? 'No Title';
+        final body = message.notification!.body ?? 'No Body';
+
+        // Access NotificationProvider and add notification
+        final notificationProvider = context.read<NotificationProvider>();
+        notificationProvider.addNotification(title, body);
+      }
+    });
+
+    String? token = await _firebaseMessaging.getToken();
+    print("Firebase Messaging Token: $token");
+  }
+
+
+
 
   void _setGreeting() {
     final hour = DateTime.now().hour;

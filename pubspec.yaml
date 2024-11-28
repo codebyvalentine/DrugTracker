@@ -13,11 +13,14 @@ dependencies:
   google_fonts: ^5.0.0
   http: ^1.2.2
   flutter_dotenv: ^5.0.2
-  firebase_core: ^2.27.0
+  firebase_core: ^2.13.0
   firebase_auth: ^4.5.0
   cloud_firestore: ^4.6.0
+  provider: ^6.1.0
+  firebase_messaging: ^14.4.0
   cupertino_icons: ^1.0.8
   intl: ^0.17.0
+  timezone: ^0.9.0
 
 dev_dependencies:
   flutter_test:
