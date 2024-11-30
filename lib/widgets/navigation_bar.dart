@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:main/utils/theme.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class CustomNavigationBar extends StatelessWidget {
   final int currentIndex;
@@ -16,27 +18,27 @@ class CustomNavigationBar extends StatelessWidget {
       currentIndex: currentIndex,
       onTap: onTabChanged,
       type: BottomNavigationBarType.fixed,
-      elevation: 4.0, // Adds slight shadow for elevation
-      backgroundColor: AppTheme.lightBackgroundGreen,
-      selectedItemColor: Theme.of(context).primaryColor, // Modern green
-      unselectedItemColor: Colors.grey, // Neutral color for unselected items
-      selectedFontSize: 14.0, // Slightly larger font for selected
-      unselectedFontSize: 12.0, // Slightly smaller font for unselected
+      elevation: 4.0,
+      backgroundColor: AppTheme.lightBackgroundGrey,
+      selectedItemColor: Theme.of(context).primaryColor,
+      unselectedItemColor: AppTheme.mediumGrey,
+      selectedFontSize: 14.0,
+      unselectedFontSize: 12.0,
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home),
+          icon: const FaIcon(FontAwesomeIcons.house, size: 20),
           label: "Home",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.add),
+          icon: const FaIcon(FontAwesomeIcons.circlePlus, size: 20),
           label: "Add",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.list),
+          icon: const FaIcon(FontAwesomeIcons.pills, size: 20),
           label: "My Meds",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.lightbulb),
+          icon: const FaIcon(FontAwesomeIcons.commentMedical, size: 20),
           label: "Zira AI",
         ),
       ],

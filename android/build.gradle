@@ -6,7 +6,7 @@ buildscript {
     }
     dependencies {
         // Add the Android Gradle plugin
-        classpath 'com.android.tools.build:gradle:8.0.2' // Ensure it's the correct version
+        classpath 'com.android.tools.build:gradle:8.7.2' // Ensure it's the correct version
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }

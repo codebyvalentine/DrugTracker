@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 import 'profile_screen.dart';
+import 'forget_password_screen.dart';
+import '../utils/theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,29 +30,40 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        // Log the user in with email and password
-        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+        // Ensure credentials are non-empty
+        final email = _emailController.text.trim();
+        final password = _passwordController.text.trim();
 
-        if (userCredential.user != null) {
-          print("Logged in user: ${userCredential.user?.email}");
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login successful!')),
-          );
-
-          // Navigate to HomeScreen (this does not work yet)
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+        if (email.isEmpty || password.isEmpty) {
+          throw FirebaseAuthException(
+            code: 'invalid-credentials',
+            message: 'Email and password cannot be empty.',
           );
         }
+
+        // Log the user in with email and password
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        print("Logged in user: ${userCredential.user?.email}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful!')),
+        );
+
+
       } on FirebaseAuthException catch (e) {
-        // Handle login errors
+        // Handle Firebase authentication errors
+        print("FirebaseAuthException: ${e.message}");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message ?? 'Login failed')),
+        );
+      } catch (e) {
+        // Handle other errors
+        print("Error during login: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An unexpected error occurred.')),
         );
       } finally {
         setState(() {
@@ -65,29 +78,55 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Login"),
+        elevation: 0,
+        backgroundColor: AppTheme.whiteColor,
+        iconTheme: IconThemeData(color: Theme.of(context).primaryColor),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                "You are not logged in",
-                style: TextStyle(
-                  fontSize: 22.0,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).textTheme.bodyLarge!.color,
+              const SizedBox(height: 40.0),
+
+              // Title
+              Center(
+                child: Text(
+                  "Welcome Back",
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 30.0),
+              const SizedBox(height: 10.0),
+              Center(
+                child: Text(
+                  "Login to your account",
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40.0),
+
+              // Email Field
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: "Email",
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14.0,
+                    horizontal: 10.0,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
@@ -101,10 +140,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 16.0),
+
+              // Password Field
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: "Password",
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14.0,
+                    horizontal: 10.0,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
                 obscureText: true,
                 validator: (value) {
@@ -118,13 +169,40 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 30.0),
+
+              // Login Button
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
-                      onPressed: _login,
-                      child: const Text("Login Now"),
-                    ),
+                onPressed: _login,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+                child: const Text(
+                  "Login Now",
+                  style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                ),
+              ),
               const SizedBox(height: 20.0),
+              //Forget password
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                    );
+                  },
+                  child: const Text(
+                    "Forget password? Reset now",
+                    style: TextStyle(fontSize: 14.0, color: AppTheme.blackColor),
+                  ),
+                ),
+              ),
+              // Navigate to Register
               Center(
                 child: TextButton(
                   onPressed: () {
@@ -133,21 +211,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       MaterialPageRoute(builder: (context) => const RegisterScreen()),
                     );
                   },
-                  child: const Text("Don't have an account? Register now"),
+                  child: const Text(
+                    "Don't have an account? Register now",
+                    style: TextStyle(fontSize: 14.0, color: AppTheme.blackColor),
+                  ),
                 ),
               ),
-          //temporal profile link for testing
-          Center(
-            child: TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                );
-              },
-              child: const Text("Go to Profile Screen"),
-            ),
-          ),
+
+              const SizedBox(height: 10.0),
             ],
           ),
         ),

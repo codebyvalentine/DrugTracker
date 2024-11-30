@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'home_screen.dart';
-
+import '../utils/notification_helper.dart';
+import '../utils/theme.dart';
 
 // AddScreen starts here
 class AddScreen extends StatefulWidget {
@@ -71,127 +73,228 @@ class _AddScreenState extends State<AddScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Medication'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        iconTheme: IconThemeData(color: Theme.of(context).primaryColor),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: drugNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Medication Name',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter medication name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10.0),
-              DropdownButtonFormField<String>(
-                value: _selectedForm,
-                decoration: const InputDecoration(
-                  labelText: 'Medication Form',
-                ),
-                items: [
-                  'Tablet',
-                  'Capsule',
-                  'Liquid',
-                  'Injection',
-                  'Inhaler',
-                ].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedForm = newValue;
-                    _updateQuantityLabel();
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select the medication form';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10.0),
-              TextFormField(
-                controller: dosageController,
-                decoration: const InputDecoration(
-                  labelText: 'Dosage (optional)',
-                  hintText: 'e.g. 10 mg',
-                ),
-              ),
-              const SizedBox(height: 10.0),
-              TextFormField(
-                controller: quantityController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: _quantityLabel,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the quantity';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 40.0),
-              Text(
-                'Advanced Settings',
-                style: TextStyle(
-                  fontSize: 18.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20.0),
-              TextFormField(
-                controller: endDateController,
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: 'End Date (optional)',
-                  hintText: 'e.g. 2024-12-31',
-                ),
-                onTap: () => _selectDate(context),
-              ),
-              const SizedBox(height: 10.0),
-              TextFormField(
-                controller: noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Additional Note (optional)',
-                  hintText: 'e.g. Take with food',
-                ),
-              ),
-              const SizedBox(height: 30.0),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ScheduleScreen(
-                          drugName: drugNameController.text,
-                          dosage: dosageController.text,
-                          pills: quantityController.text,
-                          form: _selectedForm!,
-                          endDate: endDateController.text,
-                          note: noteController.text,
-                        ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8.0),
+            // Form Fields
+            Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Medication Name
+                  TextFormField(
+                    controller: drugNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Medication Name',
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14.0,
+                        horizontal: 10.0,
                       ),
-                    );
-                  }
-                },
-                child: const Text('Next'),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the medication name';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Medication Form Dropdown
+                  DropdownButtonFormField<String>(
+                    value: _selectedForm,
+                    decoration: InputDecoration(
+                      labelText: 'Medication Form',
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14.0,
+                        horizontal: 10.0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    items: [
+                      'Tablet',
+                      'Capsule',
+                      'Liquid',
+                      'Injection',
+                      'Inhaler',
+                    ].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedForm = newValue;
+                        _updateQuantityLabel();
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select the medication form';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Dosage Field
+                  TextFormField(
+                    controller: dosageController,
+                    decoration: InputDecoration(
+                      labelText: 'Dosage (optional)',
+                      hintText: 'e.g., 500 mg',
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14.0,
+                        horizontal: 10.0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Quantity Field
+                  TextFormField(
+                    controller: quantityController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: _quantityLabel,
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14.0,
+                        horizontal: 10.0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the quantity';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 30.0),
+
+                  // Advanced Settings Header
+                  Text(
+                    'Advanced Settings',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.blackColor,
+                    ),
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 16.0),
+
+                  // End Date
+                  TextFormField(
+                    controller: endDateController,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      labelText: 'End Date (optional)',
+                      hintText: 'Select end date',
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14.0,
+                        horizontal: 10.0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onTap: () => _selectDate(context),
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Notes
+                  TextFormField(
+                    controller: noteController,
+                    decoration: InputDecoration(
+                      labelText: 'Additional Note (optional)',
+                      hintText: 'e.g., Take with food',
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14.0,
+                        horizontal: 10.0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30.0),
+
+                  // Next Button
+                  Align(
+                    alignment: Alignment.center,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ScheduleScreen(
+                                drugName: drugNameController.text,
+                                dosage: dosageController.text,
+                                pills: quantityController.text,
+                                form: _selectedForm!,
+                                endDate: endDateController.text,
+                                note: noteController.text,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_forward),
+                      label: const Text('Next'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14.0,
+                          horizontal: 30.0,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
+                        elevation: 5,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -261,92 +364,163 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(index == null ? 'Add Schedule' : 'Edit Schedule'),
-          content: Form(
-            key: _formKey,
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          backgroundColor: AppTheme.whiteColor,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextFormField(
-                  controller: timeController,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Time',
-                    hintText: 'e.g. 8:00 AM',
+                // Title
+                Text(
+                  index == null ? 'Add Schedule' : 'Edit Schedule',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.blackColor,
                   ),
-                  onTap: () => _selectTime(context),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the time';
-                    }
-                    return null;
-                  },
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 10.0),
-                DropdownButtonFormField<String>(
-                  value: _selectedFrequency,
-                  decoration: const InputDecoration(
-                    labelText: 'Frequency',
+                const SizedBox(height: 16.0),
+
+                // Form Content
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // Time Input
+                      TextFormField(
+                        controller: timeController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: 'Time',
+                          hintText: 'e.g. 8:00 AM',
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14.0,
+                            horizontal: 10.0,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onTap: () => _selectTime(context),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the time';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16.0),
+
+                      // Frequency Dropdown
+                      DropdownButtonFormField<String>(
+                        value: _selectedFrequency,
+                        decoration: InputDecoration(
+                          labelText: 'Frequency',
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14.0,
+                            horizontal: 10.0,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        items: [
+                          '1 min',
+                          'Daily',
+                          'Every 2 days',
+                        ].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedFrequency = newValue;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select the frequency';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
                   ),
-                  items: [
-                    'Daily',
-                    'Every 2 days',
-                    'Every 3 days',
-                    'Every 4 days',
-                    'Every 5 days',
-                    'Every 6 days',
-                    'Every 7 days',
-                  ].map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedFrequency = newValue;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select the frequency';
-                    }
-                    return null;
-                  },
+                ),
+                const SizedBox(height: 20.0),
+
+                // Actions
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Cancel Button
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Theme.of(context).primaryColor,
+                          side: BorderSide(color: Theme.of(context).primaryColor),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 10.0),
+
+                    // Add/Save Button
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            setState(() {
+                              if (_editingIndex != null) {
+                                _schedules[_editingIndex!] = {
+                                  'time': timeController.text,
+                                  'frequency': _selectedFrequency!,
+                                };
+                              } else {
+                                _schedules.add({
+                                  'time': timeController.text,
+                                  'frequency': _selectedFrequency!,
+                                });
+                              }
+                            });
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        child: Text(index == null ? 'Add' : 'Save'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  setState(() {
-                    if (_editingIndex != null) {
-                      _schedules[_editingIndex!] = {
-                        'time': timeController.text,
-                        'frequency': _selectedFrequency!,
-                      };
-                    } else {
-                      _schedules.add({
-                        'time': timeController.text,
-                        'frequency': _selectedFrequency!,
-                      });
-                    }
-                  });
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text(index == null ? 'Add' : 'Save'),
-            ),
-          ],
         );
       },
     );
@@ -363,81 +537,110 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Schedule Medication'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        iconTheme: IconThemeData(color: Theme.of(context).primaryColor),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              if (_schedules.isEmpty)
-                Column(
-                  children: [
-                    Center(
-                      child: Text(
-                        'No schedules. Click the add button to add schedules',
-                        style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10.0),
-                  ],
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8.0),
+            // Schedule List
+            Expanded(
+              child: _schedules.isEmpty
+                  ? Center(
+                child: Text(
+                  'No schedules added. Tap "+" to add a new schedule.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: _schedules.length + 1,
+              )
+                  : ListView.builder(
+                itemCount: _schedules.length,
                 itemBuilder: (context, index) {
-                  if (index == _schedules.length) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('More'),
-                          ElevatedButton(
-                            onPressed: _schedules.length < maxSchedules
-                                ? () => _showAddPopup(context)
-                                : null,
-                            child: const Text('Add'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
                   final schedule = _schedules[index];
                   return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    elevation: 4.0,
+                    margin: const EdgeInsets.only(bottom: 16.0),
+                    color: Colors.grey[100], // Updated card color
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+                      borderRadius: BorderRadius.circular(12.0),
                     ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16.0),
-                      title: Text(
-                        'Time: ${schedule['time']}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16.0,
-                        ),
-                      ),
-                      subtitle: Text(
-                        'Frequency: ${schedule['frequency']}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14.0,
-                        ),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () => _showAddPopup(context, index: index),
+                          // FontAwesome Clock Icon
+                          Container(
+                            padding: const EdgeInsets.all(10.0),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .primaryColor
+                                  .withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const FaIcon(
+                              FontAwesomeIcons.clock,
+                              color: Colors.green,
+                              size: 20,
+                            ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () => _deleteSchedule(index),
+                          const SizedBox(width: 12.0),
+
+                          // Schedule Details
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Time: ${schedule['time']}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 4.0),
+                                Text(
+                                  'Frequency: ${schedule['frequency']}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Edit/Delete Icons
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const FaIcon(
+                                  FontAwesomeIcons.penToSquare,
+                                  color: AppTheme.greyColor,
+                                ),
+                                onPressed: () =>
+                                    _showAddPopup(context, index: index),
+                              ),
+                              IconButton(
+                                icon: const FaIcon(
+                                  FontAwesomeIcons.trash,
+                                  color: AppTheme.redColor,
+                                ),
+                                onPressed: () => _deleteSchedule(index),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -445,67 +648,91 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   );
                 },
               ),
-              const SizedBox(height: 20.0),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: BorderSide(color: Theme.of(context).primaryColor),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Previous',
-                        style: TextStyle(color: Theme.of(context).primaryColor),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10.0),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_schedules.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please add at least one schedule.'),
-                            ),
-                          );
-                        } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ConfirmScreen(
-                                drugName: widget.drugName,
-                                dosage: widget.dosage,
-                                pills: widget.pills,
-                                form: widget.form,
-                                schedules: _schedules,
-                                endDate: widget.endDate,
-                                note: widget.note,
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                      child: const Text('Next'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+      // Previous and Next Buttons
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            // Previous Button
+            Expanded(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  side: BorderSide(color: Theme.of(context).primaryColor),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14.0),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child:
+
+                Text(
+                  'Previous',
+                  style: TextStyle(color: Theme.of(context).primaryColor),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10.0),
+
+            // Next Button
+            Expanded(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14.0),
+                ),
+                onPressed: _schedules.isNotEmpty
+                    ? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ConfirmScreen(
+                        drugName: widget.drugName,
+                        dosage: widget.dosage,
+                        pills: widget.pills,
+                        form: widget.form,
+                        schedules: _schedules,
+                        endDate: widget.endDate,
+                        note: widget.note,
+                      ),
+                    ),
+                  );
+                }
+                    : null,
+                label: const Text('Next'),
+              ),
+            ),
+          ],
+        ),
+      ),
+
+      // Floating Action Button
+      floatingActionButton: FloatingActionButton(
+        onPressed: _schedules.length < maxSchedules
+            ? () => _showAddPopup(context)
+            : null,
+        backgroundColor: _schedules.length < maxSchedules
+            ? Theme.of(context).primaryColor
+            : Colors.grey, // Disabled color
+        elevation: _schedules.length < maxSchedules ? 6 : 0, // No shadow when disabled
+        child: const FaIcon(FontAwesomeIcons.plus),
       ),
     );
   }
 }
 
 // ConfirmScreen starts here
-
-
 class ConfirmScreen extends StatefulWidget {
   final String drugName;
   final String dosage;
@@ -531,232 +758,331 @@ class ConfirmScreen extends StatefulWidget {
 }
 
 class _ConfirmScreenState extends State<ConfirmScreen> {
+  bool _isSaving = false; // State variable to track saving progress
 
   Future<void> _saveToDatabase(BuildContext context) async {
+    setState(() {
+      _isSaving = true; // Start saving
+    });
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      // Handle user not logged in
+      setState(() {
+        _isSaving = false; // Reset saving state
+      });
+      print("Error: User not logged in.");
       return;
     }
 
-    final CollectionReference medications = FirebaseFirestore.instance
-        .collection('medications')
-        .doc(user.uid)
-        .collection('userMedications');
+    try {
+      final CollectionReference medications = FirebaseFirestore.instance
+          .collection('medications')
+          .doc(user.uid)
+          .collection('userMedications');
 
-    final DateTime now = DateTime.now();
-    final DateTime endDate = widget.endDate != null && widget.endDate!.isNotEmpty
-        ? DateTime.parse(widget.endDate!)
-        : now.add(Duration(days: 365 * 2));
+      final DateTime now = DateTime.now();
+      final DateTime endDate = widget.endDate != null && widget.endDate!.isNotEmpty
+          ? DateTime.parse(widget.endDate!)
+          : now.add(const Duration(days: 365 * 2));
 
-    // Save the main medication document
-    final DocumentReference medicationRef = await medications.add({
-      'drugName': widget.drugName,
-      'dosage': widget.dosage,
-      'pills': widget.pills,
-      'form': widget.form,
-      'startDate': now.toIso8601String(),
-      'endDate': endDate.toIso8601String(),
-      'note': widget.note,
-    });
-
-    // Save each schedule as a document in a `reminders` subcollection
-    for (var schedule in widget.schedules) {
-      final String time = schedule['time'] ?? '12:00 AM';
-      final String frequency = schedule['frequency'] ?? 'daily';
-
-      // Save the schedule metadata as a separate document
-      await medicationRef.collection('reminders').add({
-        'time': time,
-        'frequency': frequency,
+      // Save the main medication document
+      final DocumentReference medicationRef = await medications.add({
+        'drugName': widget.drugName,
+        'dosage': widget.dosage,
+        'pills': widget.pills,
+        'form': widget.form,
         'startDate': now.toIso8601String(),
         'endDate': endDate.toIso8601String(),
+        'note': widget.note,
+      });
+
+      print("Medication document added with ID: ${medicationRef.id}");
+
+      for (var schedule in widget.schedules) {
+        final String time = schedule['time'] ?? '12:00 AM';
+        final String frequency = schedule['frequency'] ?? '1 min';
+
+        print("Processing schedule: $schedule");
+
+        // Parse user-selected time
+        final TimeOfDay parsedTime = TimeOfDay(
+          hour: int.parse(time.split(":")[0]),
+          minute: int.parse(time.split(":")[1].split(" ")[0]),
+        );
+
+        DateTime scheduledDateTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          parsedTime.hour,
+          parsedTime.minute,
+        );
+
+        if (scheduledDateTime.isBefore(now)) {
+          scheduledDateTime = scheduledDateTime.add(const Duration(days: 1));
+        }
+
+        print("First scheduled time: $scheduledDateTime");
+
+        if (frequency == '1 min') {
+          for (int i = 0; i < 10; i++) {
+            DateTime notificationTime = scheduledDateTime.add(Duration(minutes: i));
+            print("Scheduling notification for 1 min at: $notificationTime");
+
+            await NotificationHelper.showNotification(
+              'Medication Reminder',
+              'Time to take ${widget.drugName} (${widget.dosage})',
+              notificationTime,
+            );
+
+            await medicationRef.collection('reminders').add({
+              'time': notificationTime.toIso8601String(),
+              'frequency': '1 min',
+              'startDate': now.toIso8601String(),
+              'endDate': endDate.toIso8601String(),
+            });
+          }
+        } else if (frequency == 'Daily') {
+          for (int i = 0; i < 20; i++) {
+            DateTime notificationTime = scheduledDateTime.add(Duration(days: i));
+            print("Scheduling daily notification at: $notificationTime");
+
+            await NotificationHelper.showNotification(
+              'Medication Reminder',
+              'Time to take ${widget.drugName} (${widget.dosage})',
+              notificationTime,
+            );
+
+            await medicationRef.collection('reminders').add({
+              'time': notificationTime.toIso8601String(),
+              'frequency': 'Daily',
+              'startDate': now.toIso8601String(),
+              'endDate': endDate.toIso8601String(),
+            });
+          }
+        } else if (frequency == 'Every 2 days') {
+          for (int i = 0; i < 20; i++) {
+            DateTime notificationTime = scheduledDateTime.add(Duration(days: i * 2));
+            print("Scheduling every 2 days notification at: $notificationTime");
+
+            await NotificationHelper.showNotification(
+              'Medication Reminder',
+              'Time to take ${widget.drugName} (${widget.dosage})',
+              notificationTime,
+            );
+
+            await medicationRef.collection('reminders').add({
+              'time': notificationTime.toIso8601String(),
+              'frequency': 'Every 2 days',
+              'startDate': now.toIso8601String(),
+              'endDate': endDate.toIso8601String(),
+            });
+          }
+        }
+      }
+
+      print("All schedules processed successfully.");
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(initialIndex: 2),
+        ),
+            (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      print("Error saving data: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save medication: $e')),
+      );
+    } finally {
+      setState(() {
+        _isSaving = false; // Reset saving state
       });
     }
-
-    // Redirect to MyMedsScreen
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => HomeScreen(initialIndex: 2),
-      ),
-          (Route<dynamic> route) => false,
-    );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Confirm Medication'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Theme.of(context).primaryColor),
+        titleTextStyle: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              elevation: 4.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Drug Name',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
-                    ),
-                    const SizedBox(height: 5.0),
-                    Text(
-                      widget.drugName,
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    if (widget.dosage.isNotEmpty) ...[
-                      const SizedBox(height: 15.0),
-                      Text(
-                        'Dosage',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18.0,
-                        ),
-                      ),
-                      const SizedBox(height: 5.0),
-                      Text(
-                        widget.dosage,
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 15.0),
-                    Text(
-                      'Quantity',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
-                    ),
-                    const SizedBox(height: 5.0),
-                    Text(
-                      widget.pills,
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    const SizedBox(height: 15.0),
-                    Text(
-                      'Form',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
-                    ),
-                    const SizedBox(height: 5.0),
-                    Text(
-                      widget.form,
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    const SizedBox(height: 15.0),
-                    Text(
-                      'Schedules',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
-                    ),
-                    const SizedBox(height: 5.0),
-                    ...widget.schedules.map((schedule) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10.0),
-                      child: Text(
-                        'Time: ${schedule['time']}, Frequency: ${schedule['frequency']}',
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    )),
-                    if (widget.endDate != null && widget.endDate!.isNotEmpty) ...[
-                      const SizedBox(height: 15.0),
-                      Text(
-                        'End Date',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18.0,
-                        ),
-                      ),
-                      const SizedBox(height: 5.0),
-                      Text(
-                        widget.endDate!,
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ],
-                    if (widget.note != null && widget.note!.isNotEmpty) ...[
-                      const SizedBox(height: 15.0),
-                      Text(
-                        'Additional Note',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18.0,
-                        ),
-                      ),
-                      const SizedBox(height: 5.0),
-                      Text(
-                        widget.note!,
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ],
-                  ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title Section
+              Text(
+                "Review and Confirm",
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
+              ),
+              const SizedBox(height: 20.0),
+
+              // Medication Details Card
+              Card(
+                color: Colors.grey[50],
+                elevation: 3.0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailRow("Drug Name", widget.drugName),
+                      if (widget.dosage.isNotEmpty)
+                        _buildDetailRow("Dosage", widget.dosage),
+                      _buildDetailRow("Quantity", widget.pills),
+                      _buildDetailRow("Form", widget.form),
+                      const SizedBox(height: 20.0),
+                      Text(
+                        "Schedules",
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 10.0),
+                      ...widget.schedules.map(
+                            (schedule) => _buildScheduleCard(schedule, context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30.0),
+
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: BorderSide(color: Theme.of(context).primaryColor),
+                        padding: const EdgeInsets.symmetric(vertical: 14.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                      ),
+                      onPressed: !_isSaving
+                          ? () {
+                        Navigator.pop(context);
+                      }
+                          : null,
+                      child: Text(
+                        'Previous',
+                        style: TextStyle(color: Theme.of(context).primaryColor),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10.0),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: !_isSaving ? () => _saveToDatabase(context) : null,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                      ),
+                      child: _isSaving
+                          ? const CircularProgressIndicator(
+                        valueColor:
+                        AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                          : const Text('Save'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 30.0),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: BorderSide(color: Theme.of(context).primaryColor),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text(
-                      'Previous',
-                      style: TextStyle(color: Theme.of(context).primaryColor),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduleCard(Map<String, String> schedule, BuildContext context) {
+    return Card(
+      color: AppTheme.whiteColor,
+      elevation: 3.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          children: [
+            Icon(
+              Icons.access_time,
+              color: Theme.of(context).primaryColor,
+              size: 28.0,
+            ),
+            const SizedBox(width: 16.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Time: ${schedule['time']}',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                ),
-                const SizedBox(width: 10.0),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _saveToDatabase(context),
-                    child: const Text('Save'),
+                  Text(
+                    'Frequency: ${schedule['frequency']}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[700],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

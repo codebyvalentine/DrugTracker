@@ -10,6 +10,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
     implementation 'com.google.firebase:firebase-messaging'
 
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.3'
+
 
     // TODO: Add the dependencies for Firebase products you want to use
     // When using the BoM, don't specify versions in Firebase dependencies
@@ -23,16 +25,18 @@ dependencies {
 }
 android {
     namespace = "ca.prescribr.app"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk 35
+    ndkVersion = '28.0.12674087 rc2'
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = "17"
+        // Enable core library desugaring
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = "17"
     }
 
     defaultConfig {
@@ -40,7 +44,7 @@ android {
         applicationId = "ca.prescribr.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -53,6 +57,7 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+    buildToolsVersion '35.0.0'
 }
 
 flutter {
